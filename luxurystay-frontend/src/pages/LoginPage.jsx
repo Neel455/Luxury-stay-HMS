@@ -7,10 +7,11 @@ import Icon from '../components/Icon';
 
 // Quick-fill demo credentials — remove in production
 const DEMO_ACCOUNTS = [
-  { label: 'Admin · Margaux',     email: 'm.devereaux@luxurystay.co', pwd: 'Admin@1234!' },
+  { label: 'Admin · Margaux',     email: 'm.devereaux@luxurystay.co', pwd: 'Admin@1234!'   },
   { label: 'Manager · Henri',     email: 'h.cassel@luxurystay.co',    pwd: 'Manager@1234!' },
   { label: 'Reception · Yuki',    email: 'y.tanaka@luxurystay.co',    pwd: 'Reception@1234!' },
-  { label: 'Housekeep · Rosa',    email: 'r.mendoza@luxurystay.co',   pwd: 'House@1234!' },
+  { label: 'Housekeep · Rosa',    email: 'r.mendoza@luxurystay.co',   pwd: 'House@1234!'   },
+  { label: 'Service · Tomás',     email: 't.reyes@luxurystay.co',     pwd: 'Service@1234!' },
 ];
 
 const ROLE_LABELS = {
@@ -53,7 +54,7 @@ export default function LoginPage() {
   function getDefaultRoute(role) {
     if (role === 'guest') return '/guest';
     if (role === 'housekeeping') return '/housekeeping';
-    if (role === 'maintenance') return '/maintenance';
+    if (role === 'service') return '/services';
     return '/dashboard';
   }
 
@@ -67,8 +68,8 @@ export default function LoginPage() {
     if (role === 'housekeeping') {
       return ['/rooms', '/housekeeping', '/maintenance'].some(prefix => path.startsWith(prefix));
     }
-    if (role === 'maintenance') {
-      return ['/rooms', '/maintenance'].some(prefix => path.startsWith(prefix));
+    if (role === 'service') {
+      return ['/rooms', '/services', '/maintenance'].some(prefix => path.startsWith(prefix));
     }
     return false;
   }

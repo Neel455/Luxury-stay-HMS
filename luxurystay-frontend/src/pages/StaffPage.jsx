@@ -7,14 +7,14 @@ import Spinner from '../components/Spinner';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance'];
+const ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'];
 
 const ROLE_LABELS = {
   admin:        'Admin',
   manager:      'Manager',
   receptionist: 'Receptionist',
   housekeeping: 'Housekeeping',
-  maintenance:  'Maintenance',
+  service:      'Service Attendant',
 };
 
 const SIDEBAR_PAGE_ACCESS = [
@@ -26,7 +26,7 @@ const SIDEBAR_PAGE_ACCESS = [
       { label: 'Check-in / out',      roles: ['admin', 'manager', 'receptionist'] },
       { label: 'Rooms',               roles: ['admin', 'manager', 'receptionist', 'housekeeping'] },
       { label: 'Housekeeping',        roles: ['admin', 'manager', 'housekeeping'] },
-      { label: 'Maintenance',         roles: ['admin', 'manager', 'housekeeping', 'maintenance'] },
+      { label: 'Service Requests',    roles: ['admin', 'manager', 'housekeeping', 'service'] },
     ],
   },
   {
@@ -53,7 +53,7 @@ const DEPT_LABELS = {
   manager:      'Management',
   receptionist: 'Front Desk',
   housekeeping: 'Housekeeping',
-  maintenance:  'Maintenance',
+  service:      'Service',
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -355,7 +355,7 @@ export default function StaffPage() {
                   {activePerms === 'manager'      && 'Broad operational access including analytics and housekeeping management. Cannot manage staff or settings.'}
                   {activePerms === 'receptionist' && 'Front-desk access to reservations, check-in/out, billing, and guest records. Cannot view analytics or staff records.'}
                   {activePerms === 'housekeeping' && 'Access to the housekeeping board and task management only.'}
-                  {activePerms === 'maintenance'  && 'Access to maintenance requests only. Can submit and update their own requests.'}
+                  {activePerms === 'service'      && 'Access to all guest service requests and maintenance reports. Can start, fulfill, and resolve requests.'}
                 </p>
                 {pageAccess.map(section => (
                   <div key={section.section} style={{ marginBottom: 16 }}>

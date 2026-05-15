@@ -18,7 +18,7 @@ export default function ProtectedRoute({ children, roles }) {
   function getDefaultRoute(role) {
     if (role === 'guest') return '/guest';
     if (role === 'housekeeping') return '/housekeeping';
-    if (role === 'maintenance') return '/maintenance';
+    if (role === 'service') return '/services';
     return '/dashboard';
   }
 

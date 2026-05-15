@@ -127,7 +127,7 @@ function allowedStatuses(role, current) {
     }
     return [current];
   }
-  if (role === 'maintenance') {
+  if (role === 'service') {
     return ['maintenance', 'available'].filter(s => s !== current || current === s);
   }
   return [current];
@@ -341,7 +341,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
   async function doSave() {
     setShowWarning(false);
 
-    if (!canManage && role !== 'housekeeping' && role !== 'maintenance') {
+    if (!canManage && role !== 'housekeeping' && role !== 'service') {
       toast.error('Only admin, manager, or housekeeping can update room status.');
       return;
     }
@@ -747,7 +747,7 @@ export default function RoomsPage() {
   const queryClient = useQueryClient();
 
   const canManage      = ADMIN_MGR.includes(role);
-  const canChangeStatus = ADMIN_MGR.includes(role) || role === 'housekeeping' || role === 'maintenance';
+  const canChangeStatus = ADMIN_MGR.includes(role) || role === 'housekeeping' || role === 'service';
   const canDelete       = role === 'admin';
 
   const [filter,   setFilter]   = useState('all');

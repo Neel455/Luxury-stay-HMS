@@ -12,7 +12,7 @@ const {
   fulfillServiceValidator,
 } = require('../validators/serviceValidators');
 
-const DESK_ROLES = ['admin', 'manager', 'receptionist'];
+const DESK_ROLES = ['admin', 'manager', 'receptionist', 'service'];
 
 router.use(protect);
 

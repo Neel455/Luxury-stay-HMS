@@ -27,8 +27,8 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: {
-        values: ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance', 'guest'],
-        message: 'Role must be one of: admin, manager, receptionist, housekeeping, maintenance, guest.',
+        values: ['admin', 'manager', 'receptionist', 'housekeeping', 'service', 'guest'],
+        message: 'Role must be one of: admin, manager, receptionist, housekeeping, service, guest.',
       },
       default: 'guest',
     },

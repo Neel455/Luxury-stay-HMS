@@ -15,6 +15,7 @@ async function seed() {
     { name: 'Henri Cassel',      email: 'h.cassel@luxurystay.co',    password: 'Manager@1234!',   role: 'manager' },
     { name: 'Yuki Tanaka',       email: 'y.tanaka@luxurystay.co',    password: 'Reception@1234!', role: 'receptionist' },
     { name: 'Rosa Mendoza',      email: 'r.mendoza@luxurystay.co',   password: 'House@1234!',     role: 'housekeeping' },
+    { name: 'Tomás Reyes',       email: 't.reyes@luxurystay.co',     password: 'Service@1234!',   role: 'service' },
   ];
 
   for (const u of users) {

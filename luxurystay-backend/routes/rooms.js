@@ -12,9 +12,9 @@ const {
   checkAvailabilityValidator,
 } = require('../validators/roomValidators');
 
-const ALL_STAFF  = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance'];
-const ADMIN_MGR  = ['admin', 'manager'];
-const STATUS_ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance'];
+const ALL_STAFF    = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'];
+const ADMIN_MGR    = ['admin', 'manager'];
+const STATUS_ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'];
 
 // All routes require authentication
 router.use(protect);

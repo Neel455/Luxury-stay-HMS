@@ -18,7 +18,8 @@ import ReservationsPage from './pages/ReservationsPage';
 import CheckInPage      from './pages/CheckInPage';
 import RoomsPage        from './pages/RoomsPage';
 import HousekeepingPage from './pages/HousekeepingPage';
-import MaintenancePage  from './pages/MaintenancePage';
+import MaintenancePage       from './pages/MaintenancePage';
+import ServiceRequestsPage   from './pages/ServiceRequestsPage';
 
 // Commerce
 import BillingPage  from './pages/BillingPage';
@@ -32,7 +33,7 @@ import StaffPage       from './pages/StaffPage';
 
 const ADMIN_MGR = ['admin', 'manager'];
 const DESK      = ['admin', 'manager', 'receptionist'];
-const ALL_STAFF = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance'];
+const ALL_STAFF = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'];
 
 export default function App() {
   return (
@@ -86,7 +87,8 @@ export default function App() {
         <Route path="/checkin"      element={<ProtectedRoute roles={DESK}><CheckInPage /></ProtectedRoute>} />
         <Route path="/rooms"        element={<ProtectedRoute roles={ALL_STAFF}><RoomsPage /></ProtectedRoute>} />
         <Route path="/housekeeping" element={<ProtectedRoute roles={['admin','manager','housekeeping']}><HousekeepingPage /></ProtectedRoute>} />
-        <Route path="/maintenance"  element={<ProtectedRoute roles={['admin','manager','housekeeping','maintenance']}><MaintenancePage /></ProtectedRoute>} />
+        <Route path="/maintenance"  element={<ProtectedRoute roles={['admin','manager','housekeeping','service']}><MaintenancePage /></ProtectedRoute>} />
+        <Route path="/services"     element={<ProtectedRoute roles={['admin','manager','housekeeping','service']}><ServiceRequestsPage /></ProtectedRoute>} />
 
         {/* Commerce */}
         <Route path="/billing"  element={<ProtectedRoute roles={DESK}><BillingPage /></ProtectedRoute>} />

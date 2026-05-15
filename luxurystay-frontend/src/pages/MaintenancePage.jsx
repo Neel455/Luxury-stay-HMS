@@ -33,7 +33,7 @@ const STATUS_CONFIG = {
 };
 
 const ADMIN_MGR  = ['admin', 'manager'];
-const MAINT_MGMT = ['admin', 'manager', 'maintenance'];
+const MAINT_MGMT = ['admin', 'manager', 'service'];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 

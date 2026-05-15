@@ -1,6 +1,6 @@
 const { AppError } = require('./errorHandler');
 
-const VALID_ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance', 'guest'];
+const VALID_ROLES = ['admin', 'manager', 'receptionist', 'housekeeping', 'service', 'guest'];
 
 /**
  * Restrict access to one or more roles.

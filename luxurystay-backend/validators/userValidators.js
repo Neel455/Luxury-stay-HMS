@@ -1,6 +1,6 @@
 const { body } = require('express-validator');
 
-const VALID_ROLES  = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance', 'guest'];
+const VALID_ROLES  = ['admin', 'manager', 'receptionist', 'housekeeping', 'service', 'guest'];
 const PASSWORD_REGEX = /(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
 const PASSWORD_MSG   = 'Password must contain at least one uppercase letter, one lowercase letter, and one number.';
 const PHONE_REGEX    = /^\+?[\d\s\-()\/.]{7,20}$/;

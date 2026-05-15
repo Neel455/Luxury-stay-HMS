@@ -66,17 +66,17 @@ const ROLE_PERMISSIONS = {
     notifications:{ view: true },
   },
 
-  maintenance: {
+  service: {
     dashboard:    { view: true },
     users:        { view: false, create: false, edit: false,  deactivate: false },
     guests:       { view: false, create: false, edit: false,  delete: false, search: false },
-    rooms:        { view: true,  create: false, edit: false,  delete: false, updateStatus: false },
+    rooms:        { view: true,  create: false, edit: false,  delete: false, updateStatus: true },
     reservations: { view: false, create: false, edit: false,  cancel: false, checkIn: false, checkOut: false },
     invoices:     { view: false, create: false, edit: false,  updatePayment: false },
     housekeeping: { view: false, create: false, assign: false, complete: false, reportIssue: false },
-    maintenance:  { view: true,  create: false, assign: false, resolve: true },
+    maintenance:  { view: true,  create: true,  assign: false, resolve: true },
     feedback:     { view: false, create: false, respond: false },
-    services:     { view: false, create: false, assign: false },
+    services:     { view: true,  create: false, assign: true,  fulfill: true },
     reports:      { view: false },
     notifications:{ view: true },
   },

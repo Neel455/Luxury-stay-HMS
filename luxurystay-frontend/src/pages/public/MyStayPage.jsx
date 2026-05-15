@@ -301,11 +301,14 @@ const SERVICES = [
 ];
 
 const TODAY_SCHEDULE = [
-  { time: '09:00', t: 'Breakfast · Le Jardin',  s: 'Table 4 · under the olive',            i: 'coffee', status: 'Reserved'       },
-  { time: '11:30', t: 'Tennis · clay court II', s: 'Coach Mathéo · 60 min',                i: 'star',   status: 'Confirmed'      },
-  { time: '14:00', t: 'Spa · La Mer ritual',    s: 'Hammam, salt scrub, oil',              i: 'spa',    status: 'Booked · 90 min'},
-  { time: '19:30', t: 'Sunset walk · garden',   s: 'Suggested · Adèle will leave a flute', i: 'leaf',   status: 'Suggested'      },
-  { time: '20:30', t: 'Dinner · Le Jardin',     s: 'Tasting menu · paired wines',          i: 'star',   status: 'Reserved'       },
+  { time: '07:00', t: 'Morning pool opens',        s: 'Heated · towels & water provided',         i: 'sparkle', status: 'Daily'          },
+  { time: '07:30', t: 'Breakfast · Le Jardin',     s: 'À la carte & buffet · until 11:00',        i: 'coffee',  status: 'Until 11:00'    },
+  { time: '10:00', t: 'Spa & hammam open',         s: 'Six rituals · two hammams · book at desk', i: 'spa',     status: 'Until 21:00'    },
+  { time: '12:30', t: 'Lunch · Le Jardin',         s: 'Light menu & sharing plates',              i: 'star',    status: 'Until 15:00'    },
+  { time: '16:00', t: 'Afternoon tea · terrace',   s: 'Pâtisserie, tisanes & pressed juices',     i: 'coffee',  status: 'Until 18:00'    },
+  { time: '18:30', t: 'Sunset aperitif · garden',  s: 'Champagne & canapés · complimentary',      i: 'leaf',    status: 'Until 20:00'    },
+  { time: '19:30', t: 'Dinner · Le Jardin',        s: 'Tasting & à la carte menus',               i: 'star',    status: 'Until 22:30'    },
+  { time: '22:00', t: 'Bar Étoile',                s: 'Cocktails, wines & nightcaps',             i: 'key',     status: 'Until midnight' },
 ];
 
 // ─── Reservation detail slide-over ───────────────────────────────────────────
@@ -585,8 +588,10 @@ export default function GuestPortalPage() {
   const [showHistory,       setShowHistory]       = useState(false);
   const [feedbackTarget,    setFeedbackTarget]    = useState(null);
 
-  const { data: resData, loading: resLoading } = useApi('/api/guest/reservations');
-  const reservations = resData?.reservations ?? [];
+  const { data: resData,  loading: resLoading  } = useApi('/api/guest/reservations');
+  const { data: svcData,  loading: svcLoading  } = useApi('/api/guest/service');
+  const reservations  = resData?.reservations ?? [];
+  const myRequests    = svcData?.requests     ?? [];
 
   const activeStays   = reservations.filter(r => r.status === 'checked-in').sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
   const upcomingStays = reservations.filter(r => ['confirmed', 'pending'].includes(r.status)).sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
@@ -605,10 +610,11 @@ export default function GuestPortalPage() {
       await api.post('/api/guest/service', { serviceType, details });
       toast.success('Request sent — our team will attend shortly.');
       setServiceModal(null);
+      queryClient.invalidateQueries({ queryKey: ['/api/guest/service'] });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not send request.');
     }
-  }, [toast]);
+  }, [toast, queryClient]);
 
   const handleCancelReservation = useCallback((reservationId) => {
     setCancelTarget(reservationId);
@@ -738,7 +744,7 @@ export default function GuestPortalPage() {
                 { l: 'Sunset',             v: '21:12',                                   s: 'Cabana ready'                          },
                 { l: displayStay.status === 'checked-in' ? 'Nights remaining' : 'Duration', v: toRoman(nightsLeft), s: `Check-out ${fmtShort(displayStay.checkOut).split(' ').slice(0,2).join(' ')}` },
                 { l: 'Folio · total',      v: `€${totalAmt.toLocaleString()}`,           s: 'Settled on dep.'                       },
-                { l: 'Concierge',          v: 'Priya',                                   s: 'On until 22:00'                        },
+                { l: 'My requests',        v: myRequests.filter(r => ['pending','in-progress'].includes(r.status)).length || '—', s: myRequests.length ? `${myRequests.length} total` : 'None yet' },
               ].map((t, i) => (
                 <div key={i} style={{ background: 'rgba(26,24,20,0.85)', padding: '20px 22px' }}>
                   <div className="eyebrow" style={{ color: 'var(--brass-soft)', marginBottom: 8 }}>{t.l}</div>
@@ -835,7 +841,7 @@ export default function GuestPortalPage() {
               )}
 
               {/* Service request grid */}
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div id="services-grid" style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18 }}>
                 <h2 className="display" style={{ fontSize: 36, margin: 0 }}>Request <em>a service.</em></h2>
                 <span style={{ fontSize: 12, color: 'var(--mute)', letterSpacing: '0.05em', fontWeight: 500 }}>typical reply · 4 min</span>
               </div>
@@ -984,29 +990,70 @@ export default function GuestPortalPage() {
                 </button>
               </div>
 
-              {/* Concierge card — dark ink */}
-              <div style={{ background: 'var(--ink)', color: 'var(--ivory)', padding: 28, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', top: -20, right: -10, fontFamily: 'var(--serif)', fontSize: 140, fontStyle: 'italic', color: 'rgba(160,128,84,0.12)', lineHeight: 0.8, userSelect: 'none', pointerEvents: 'none' }}>P</div>
-                <div className="eyebrow" style={{ color: 'var(--brass-soft)', marginBottom: 16, position: 'relative' }}>Your concierge</div>
-                <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 20, position: 'relative' }}>
-                  <div className="avatar" style={{ width: 56, height: 56, fontSize: 18, background: 'var(--brass)', color: 'var(--paper)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600 }}>PS</div>
-                  <div>
-                    <div style={{ fontFamily: 'var(--serif)', fontSize: 24, fontStyle: 'italic' }}>Priya Shankar</div>
-                    <div style={{ fontSize: 12, color: 'var(--brass-soft)', letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 3, fontWeight: 600 }}>On duty · 06:00–22:00</div>
+              {/* Active requests card */}
+              {(() => {
+                const SVC_LABEL = { room_service: 'In-room dining', wake_up_call: 'Wake-up call', laundry: 'Laundry', spa: 'Spa', transport: 'Transport', amenities: 'Housekeeping', dining: 'Dining', concierge: 'Concierge', other: 'Other' };
+                const SVC_ICON  = { room_service: 'coffee', wake_up_call: 'clock', laundry: 'sparkle', spa: 'leaf', transport: 'key', amenities: 'sparkle', dining: 'star', concierge: 'crown', other: 'wrench' };
+                const STATUS_COLOR = { pending: '#A07830', 'in-progress': '#2D7A4F', fulfilled: '#6B6459', cancelled: '#B94040' };
+                const STATUS_LABEL = { pending: 'Pending', 'in-progress': 'In progress', fulfilled: 'Fulfilled', cancelled: 'Cancelled' };
+                const recent = myRequests.slice(0, 4);
+                return (
+                  <div style={{ background: 'var(--ink)', color: 'var(--ivory)', padding: 28, position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', top: -20, right: -10, fontFamily: 'var(--serif)', fontSize: 120, fontStyle: 'italic', color: 'rgba(160,128,84,0.10)', lineHeight: 0.8, userSelect: 'none', pointerEvents: 'none' }}>R</div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 18, position: 'relative' }}>
+                      <div className="eyebrow" style={{ color: 'var(--brass-soft)' }}>Your requests</div>
+                      {myRequests.length > 0 && (
+                        <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--brass-soft)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          {myRequests.filter(r => ['pending','in-progress'].includes(r.status)).length} active
+                        </span>
+                      )}
+                    </div>
+                    {svcLoading && (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--mute-2)', fontSize: 13, marginBottom: 16 }}>
+                        <div className="spinner" style={{ width: 12, height: 12, borderWidth: 1.5, borderColor: 'rgba(247,243,236,0.3)', borderTopColor: 'var(--brass-soft)' }} />
+                        Loading…
+                      </div>
+                    )}
+                    {!svcLoading && recent.length === 0 && (
+                      <p style={{ fontSize: 13, color: 'rgba(247,243,236,0.45)', fontFamily: 'var(--serif)', fontStyle: 'italic', lineHeight: 1.6, marginBottom: 18 }}>
+                        No requests yet. Use the services grid below to call for assistance.
+                      </p>
+                    )}
+                    {!svcLoading && recent.length > 0 && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 18 }}>
+                        {recent.map(req => (
+                          <div key={req._id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <div style={{ width: 30, height: 30, flexShrink: 0, borderRadius: '50%', background: 'rgba(160,120,48,0.18)', border: '1px solid rgba(160,120,48,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--brass-soft)' }}>
+                              <Icon name={SVC_ICON[req.serviceType] || 'star'} size={13} />
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--ivory)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {SVC_LABEL[req.serviceType] || req.serviceType}
+                              </div>
+                              <div style={{ fontSize: 11, color: 'rgba(247,243,236,0.45)', marginTop: 1 }}>
+                                {new Date(req.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                              </div>
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: STATUS_COLOR[req.status] || 'var(--mute-2)', flexShrink: 0 }}>
+                              {STATUS_LABEL[req.status] || req.status}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ width: '100%', justifyContent: 'center', color: 'var(--ivory)', borderColor: 'rgba(247,243,236,0.2)' }}
+                      onClick={() => {
+                        const el = document.getElementById('services-grid');
+                        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      <Icon name="plus" size={12} /> New request
+                    </button>
                   </div>
-                </div>
-                <p style={{ fontSize: 14, color: 'var(--mute-2)', lineHeight: 1.6, fontFamily: 'var(--serif)', fontStyle: 'italic', marginBottom: 20, position: 'relative', fontWeight: 500 }}>
-                  "A pleasure. Anything I can attend to before your visit — perhaps a tisane brought up to the terrace?"
-                </p>
-                <div style={{ display: 'flex', gap: 8, position: 'relative' }}>
-                  <a href="tel:+33493881424" className="btn btn-ghost btn-sm" style={{ flex: 1, justifyContent: 'center', color: 'var(--ivory)', borderColor: 'rgba(247,243,236,0.2)', textDecoration: 'none' }}>
-                    <Icon name="phone" size={12} /> Call
-                  </a>
-                  <Link to="/contact" className="btn btn-primary btn-sm" style={{ flex: 1, justifyContent: 'center', textDecoration: 'none' }}>
-                    <Icon name="mail" size={12} /> Message
-                  </Link>
-                </div>
-              </div>
+                );
+              })()}
 
               {/* Étoile member strip */}
               <div style={{ padding: 20, background: 'var(--linen)', border: '1px solid var(--hairline)', display: 'flex', gap: 14, alignItems: 'center' }}>

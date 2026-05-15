@@ -406,6 +406,24 @@ exports.submitServiceRequest = catchAsync(async (req, res, next) => {
 const VALID_MAINT_CATEGORIES = ['plumbing', 'electrical', 'ac', 'hvac', 'furniture', 'technology', 'structural', 'other'];
 
 /**
+ * GET /api/guest/service
+ * Returns the calling guest's own service requests (most recent first, limit 20).
+ */
+exports.getMyServiceRequests = catchAsync(async (req, res, next) => {
+  const guest = await resolveGuest(req.user.email);
+  if (!guest) {
+    return sendSuccess(res, 200, 'No service requests found.', { requests: [] });
+  }
+
+  const requests = await ServiceRequest.find({ guest: guest._id })
+    .sort({ createdAt: -1 })
+    .limit(20)
+    .lean();
+
+  sendSuccess(res, 200, 'Service requests retrieved.', { requests });
+});
+
+/**
  * POST /api/guest/maintenance
  * Submit a maintenance report from a guest.
  * Body: { category, description }

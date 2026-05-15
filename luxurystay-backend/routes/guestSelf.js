@@ -17,6 +17,7 @@ router.patch('/reservations/:id/cancel',            guestSelfController.cancelMy
 router.get('/history',                              guestSelfController.getMyHistory);
 router.post('/feedback',     guestSelfController.submitFeedback);
 router.post('/book',         guestSelfController.createBooking);
+router.get('/service',       guestSelfController.getMyServiceRequests);
 router.post('/service',      guestSelfController.submitServiceRequest);
 router.post('/maintenance',  guestSelfController.submitMaintenanceReport);
 

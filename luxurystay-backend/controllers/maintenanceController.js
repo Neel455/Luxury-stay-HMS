@@ -9,7 +9,7 @@ const { validateObjectId } = require('../utils/objectId');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const MAINTENANCE_ROLES = ['admin', 'manager', 'maintenance'];
+const MAINTENANCE_ROLES = ['admin', 'manager', 'service'];
 
 const populateRequest = (query) =>
   query

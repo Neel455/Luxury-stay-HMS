@@ -14,8 +14,8 @@ const {
 } = require('../validators/maintenanceValidators');
 
 // All authenticated staff can report issues; role-based access per action
-const ALL_STAFF  = ['admin', 'manager', 'receptionist', 'housekeeping', 'maintenance'];
-const MAINT_MGMT = ['admin', 'manager', 'maintenance'];
+const ALL_STAFF  = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'];
+const MAINT_MGMT = ['admin', 'manager', 'service'];
 const ADMIN_MGR  = ['admin', 'manager'];
 
 // All routes require authentication

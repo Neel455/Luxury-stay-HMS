@@ -9,7 +9,7 @@ const NAV = [
     { id: 'checkin',      label: 'Check-in / out', icon: 'key',       path: '/checkin',      roles: ['admin', 'manager', 'receptionist'] },
     { id: 'rooms',        label: 'Rooms',           icon: 'bed',       path: '/rooms',        roles: ['admin', 'manager', 'receptionist', 'housekeeping'] },
     { id: 'housekeeping', label: 'Housekeeping',   icon: 'sparkle',   path: '/housekeeping', roles: ['admin', 'manager', 'housekeeping'] },
-    { id: 'maintenance',  label: 'Maintenance',    icon: 'wrench',    path: '/maintenance',  roles: ['admin', 'manager', 'housekeeping', 'maintenance'] },
+    { id: 'services',     label: 'Service Requests', icon: 'wrench',  path: '/services',     roles: ['admin', 'manager', 'housekeeping', 'service'] },
   ]},
   { section: 'Commerce', items: [
     { id: 'billing',  label: 'Billing',   icon: 'receipt', path: '/billing',  roles: ['admin', 'manager', 'receptionist'] },
@@ -33,7 +33,7 @@ function getRoleTitle(role) {
     manager:      'Front Office Manager',
     receptionist: 'Receptionist',
     housekeeping: 'Head of Housekeeping',
-    maintenance:  'Maintenance Lead',
+    service:      'Service Attendant',
   };
   return titles[role] || role;
 }
