@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npx vite *)",
+      "Bash(Get-ChildItem -Recurse -Path \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-backend\" -Directory)",
+      "Bash(Select-Object -First 20)",
+      "Bash(Format-Table FullName)",
+      "Bash(grep -E \"\\\\.js$\")",
+      "PowerShell(Get-ChildItem \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-backend\" | Where-Object { $_.Name -match '^\\(app|server\\)\\\\.\\(js|ts\\)$' } | Select-Object -ExpandProperty Name)",
+      "Bash(node scripts/seedSuites.js)",
+      "Bash(Get-ChildItem -Path \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-frontend\\\\src\\\\pages\" -Filter \"*.jsx\")",
+      "Bash(Select-Object Name)",
+      "Bash(Sort-Object Name)",
+      "PowerShell(Test-Path \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-frontend\\\\src\\\\pages\"; Get-ChildItem -Path \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-frontend\\\\src\\\\pages\" -File | ForEach-Object { $_.Name })",
+      "Bash(dir \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-backend\\\\controllers\")",
+      "Bash(dir \"E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-backend\\\\routes\")",
+      "Bash(dir E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-frontend\\\\src\\\\pages *)",
+      "Bash(dir E:\\\\aptech\\\\office\\\\Luxurystay\\\\luxurystay-frontend\\\\src\\\\pages\\\\public *)"
+    ]
+  }
+}
