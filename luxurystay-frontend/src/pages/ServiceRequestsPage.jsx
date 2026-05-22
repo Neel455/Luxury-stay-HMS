@@ -9,27 +9,29 @@ import Spinner from '../components/Spinner';
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const SVC_TYPE_LABELS = {
-  room_service: 'Room Service',
-  wake_up_call: 'Wake-up Call',
-  laundry:      'Laundry',
-  spa:          'Spa & Wellness',
-  transport:    'Transport',
-  amenities:    'Amenities',
-  dining:       'Dining',
-  concierge:    'Concierge',
-  other:        'Other',
+  room_service:  'Room Service',
+  wake_up_call:  'Wake-up Call',
+  laundry:       'Laundry',
+  spa:           'Spa & Wellness',
+  transport:     'Transport',
+  amenities:     'Amenities',
+  dining:        'Dining',
+  concierge:     'Concierge',
+  late_checkout: 'Late Check-out',
+  other:         'Other',
 };
 
 const SVC_TYPE_ICONS = {
-  room_service: 'coffee',
-  wake_up_call: 'clock',
-  laundry:      'leaf',
-  spa:          'spa',
-  transport:    'arrow_right',
-  amenities:    'sparkle',
-  dining:       'star',
-  concierge:    'key',
-  other:        'wrench',
+  room_service:  'coffee',
+  wake_up_call:  'clock',
+  laundry:       'leaf',
+  spa:           'spa',
+  transport:     'arrow_right',
+  amenities:     'sparkle',
+  dining:        'star',
+  concierge:     'key',
+  late_checkout: 'key',
+  other:         'wrench',
 };
 
 const SVC_STATUS_CONFIG = {

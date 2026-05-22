@@ -1,5 +1,12 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import ProtectedRoute from './components/ProtectedRoute';
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 import AppShell from './layouts/AppShell';
 import LoginPage from './pages/LoginPage';
 import MyStayPage from './pages/public/MyStayPage';
@@ -37,6 +44,8 @@ const ALL_STAFF = ['admin', 'manager', 'receptionist', 'housekeeping', 'service'
 
 export default function App() {
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       {/* ── Fully public ─────────────────────────────────────────────── */}
       <Route path="/"        element={<TheHousePage />} />
@@ -104,5 +113,6 @@ export default function App() {
       {/* Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
+    </>
   );
 }

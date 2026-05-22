@@ -297,7 +297,7 @@ const SERVICES = [
   { label: 'Reserve dinner',        sub: 'Le Jardin · 2★',            icon: 'star',        type: 'dining'        },
   { label: 'Spa appointment',       sub: 'Six rituals · two hammams',  icon: 'spa',         type: 'spa'           },
   { label: 'Maintenance · discreet',sub: 'Tomás · within the hour',   icon: 'wrench',      type: 'maintenance'   },
-  { label: 'Late check-out',        sub: '€60 / hour · availability',  icon: 'key',         type: 'other'         },
+  { label: 'Late check-out',        sub: '€60 / hour · availability',  icon: 'key',         type: 'late_checkout' },
 ];
 
 const TODAY_SCHEDULE = [
@@ -676,6 +676,12 @@ export default function GuestPortalPage() {
     ? nightsRemaining(displayStay.checkOut)
     : displayStay?.nights || 0;
 
+  const todayIso        = new Date().toISOString().slice(0, 10);
+  const checkoutDayStr  = displayStay?.checkOut?.slice(0, 10);
+  const isCheckoutDay   = displayStay?.status === 'checked-in' && checkoutDayStr === todayIso;
+  const isOverdue       = displayStay?.status === 'checked-in' && !!checkoutDayStr && checkoutDayStr < todayIso;
+  const lateCheckoutSvc = SERVICES.find(s => s.type === 'late_checkout');
+
   const firstName = user?.name?.split(' ')[0] || 'dear guest';
   const todayLabel = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'short' });
 
@@ -850,24 +856,47 @@ export default function GuestPortalPage() {
               </p>
 
               {activeStay && safeIndex === 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 48 }}>
-                  {SERVICES.map((s, i) => (
-                    <button
-                      key={i}
-                      onClick={() => s.type === 'maintenance' ? setMaintModal(true) : setServiceModal({ type: s.type, label: s.label })}
-                      style={{ background: 'var(--paper)', border: 'none', padding: '22px 22px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.background = 'var(--linen)'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'var(--paper)'}
-                    >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                        <Icon name={s.icon} size={16} style={{ color: 'var(--brass-deep)' }} />
-                        <Icon name="arrow_right" size={11} style={{ color: 'var(--mute)' }} />
-                      </div>
-                      <div style={{ fontSize: 14, fontWeight: 500 }}>{s.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--mute)', fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 500 }}>{s.sub}</div>
-                    </button>
-                  ))}
-                </div>
+                isOverdue ? (
+                  <p style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 48, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>
+                    Your stay has concluded. Please visit reception to finalise your departure.
+                  </p>
+                ) : (
+                  <>
+                    {isCheckoutDay && lateCheckoutSvc && (
+                      <button
+                        onClick={() => setServiceModal({ type: lateCheckoutSvc.type, label: lateCheckoutSvc.label })}
+                        style={{ width: '100%', background: 'var(--linen)', border: '1px solid var(--hairline)', borderBottom: 'none', padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 16, cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
+                        onMouseEnter={e => e.currentTarget.style.background = '#ede8df'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'var(--linen)'}
+                      >
+                        <Icon name="key" size={18} style={{ color: 'var(--brass-deep)', flexShrink: 0 }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 600 }}>{lateCheckoutSvc.label}</div>
+                          <div style={{ fontSize: 12, color: 'var(--mute)', fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 500, marginTop: 2 }}>{lateCheckoutSvc.sub}</div>
+                        </div>
+                        <Icon name="arrow_right" size={11} style={{ color: 'var(--mute)', flexShrink: 0 }} />
+                      </button>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 48 }}>
+                      {SERVICES.filter(s => !(isCheckoutDay && s.type === 'late_checkout')).map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => s.type === 'maintenance' ? setMaintModal(true) : setServiceModal({ type: s.type, label: s.label })}
+                          style={{ background: 'var(--paper)', border: 'none', padding: '22px 22px', display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8, cursor: 'pointer', textAlign: 'left', transition: 'background 0.15s' }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'var(--linen)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'var(--paper)'}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                            <Icon name={s.icon} size={16} style={{ color: 'var(--brass-deep)' }} />
+                            <Icon name="arrow_right" size={11} style={{ color: 'var(--mute)' }} />
+                          </div>
+                          <div style={{ fontSize: 14, fontWeight: 500 }}>{s.label}</div>
+                          <div style={{ fontSize: 12, color: 'var(--mute)', fontFamily: 'var(--serif)', fontStyle: 'italic', fontWeight: 500 }}>{s.sub}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )
               ) : (
                 <p style={{ fontSize: 13, color: 'var(--mute)', marginBottom: 48, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>
                   Service requests are available once your stay begins.

@@ -1,4 +1,8 @@
 import { useState, useMemo } from 'react';
+import {
+  ResponsiveContainer, LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Area, AreaChart,
+} from 'recharts';
 import { useApi } from '../hooks/useApi';
 import Spinner from '../components/Spinner';
 import Icon from '../components/Icon';
@@ -51,58 +55,89 @@ function Legend({ color, label, dashed }) {
   );
 }
 
-// ─── Revenue Bar Chart ────────────────────────────────────────────────────────
+// ─── Shared chart styles ──────────────────────────────────────────────────────
 
-function RevenueBarChart({ series }) {
-  const max = Math.max(...series.map(d => d.revenue || 0), 1);
-  const labels = series.map(d => {
-    const date = new Date(d.date || d.period || '');
-    return isNaN(date) ? (d.period || '') : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
-  });
+const CHART_TICK  = { fontSize: 10, fill: '#a09880', fontFamily: 'monospace' };
+const CHART_GRID  = { stroke: '#e8e2d8', strokeDasharray: '3 5' };
+
+function ChartTooltip({ active, payload, label, formatter }) {
+  if (!active || !payload?.length) return null;
   return (
-    <div style={{ padding: 28 }}>
-      <div className="bar-row" style={{ height: 140 }}>
-        {series.map((d, i) => {
-          const h = (d.revenue || 0) > 0 ? Math.max(((d.revenue || 0) / max) * 100, 4) : 1;
-          return (
-            <div key={i} className="bar" style={{ height: `${h}%` }}
-              title={`${labels[i]}: ${fmtCurrency(d.revenue)}`} />
-          );
-        })}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
-        <span>{labels[0]}</span>
-        <span>{labels[Math.floor(labels.length / 2)]}</span>
-        <span>{labels[labels.length - 1]}</span>
-      </div>
+    <div style={{ background: 'var(--paper)', border: '1px solid var(--hairline)', padding: '8px 12px', fontSize: 11, fontFamily: 'monospace' }}>
+      <div style={{ color: 'var(--mute)', marginBottom: 4 }}>{label}</div>
+      {payload.map((p, i) => (
+        <div key={i} style={{ color: 'var(--ink)', fontWeight: 600 }}>
+          {formatter ? formatter(p.value) : p.value}
+        </div>
+      ))}
     </div>
   );
 }
 
-// ─── Occupancy SVG Line Chart ─────────────────────────────────────────────────
+// ─── Revenue Bar Chart ────────────────────────────────────────────────────────
 
-function OccupancyLineChart({ series }) {
-  const w = 600, h = 180;
-  if (!series.length) return <div style={{ height: h, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', fontSize: 12 }}>No data</div>;
+function RevenueBarChart({ series }) {
+  const data = series.map(d => {
+    const date = new Date(d.date || d.period || '');
+    return {
+      label: isNaN(date) ? (d.period || '') : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }),
+      revenue: d.revenue || 0,
+    };
+  });
 
-  const vals = series.map(d => d.occupancyPct || 0);
-  const path = vals.map((v, i) => `${i === 0 ? 'M' : 'L'} ${(i / Math.max(vals.length - 1, 1)) * w} ${h - (v / 100) * h}`).join(' ');
-  const area = path + ` L ${w} ${h} L 0 ${h} Z`;
-
-  const gridLines = [25, 50, 75, 100];
+  const step = Math.ceil(data.length / 6);
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} width="100%" height="180" preserveAspectRatio="none">
-      {gridLines.map(g => (
-        <line key={g} x1="0" x2={w} y1={h - (g / 100) * h} y2={h - (g / 100) * h}
-          stroke="var(--hairline-2)" strokeWidth="1" strokeDasharray="2 4" />
-      ))}
-      <path d={area} fill="var(--brass)" opacity="0.08" />
-      <path d={path} stroke="var(--ink)" strokeWidth="2" fill="none" />
-      {vals.map((v, i) => (
-        <circle key={i} cx={(i / Math.max(vals.length - 1, 1)) * w} cy={h - (v / 100) * h} r="3" fill="var(--ink)" />
-      ))}
-    </svg>
+    <div style={{ padding: '20px 16px 8px' }}>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} barCategoryGap="30%">
+          <CartesianGrid vertical={false} {...CHART_GRID} />
+          <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={false}
+            interval={step - 1} />
+          <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} tickFormatter={v => fmtCurrency(v)} width={52} />
+          <Tooltip content={<ChartTooltip formatter={fmtCurrency} />} cursor={{ fill: 'var(--linen)' }} wrapperStyle={{ transition: 'none' }} />
+          <Bar dataKey="revenue" fill="var(--ink)" radius={[2, 2, 0, 0]} />
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+// ─── Occupancy Line Chart ─────────────────────────────────────────────────────
+
+function OccupancyLineChart({ series }) {
+  if (!series.length) return (
+    <div style={{ height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', fontSize: 12 }}>
+      No data
+    </div>
+  );
+
+  const data = series.map(d => {
+    const raw = d.date || d.period || '';
+    return { label: raw.length === 10 ? raw.slice(5) : raw, occ: d.occupancyPct || 0 };
+  });
+
+  const step = Math.ceil(data.length / 6);
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={data} margin={{ top: 10, right: 8, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="occGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%"  stopColor="var(--brass)" stopOpacity={0.15} />
+            <stop offset="95%" stopColor="var(--brass)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid {...CHART_GRID} />
+        <XAxis dataKey="label" tick={CHART_TICK} tickLine={false} axisLine={false} interval={step - 1} />
+        <YAxis tick={CHART_TICK} tickLine={false} axisLine={false} domain={[0, 100]}
+          ticks={[0, 25, 50, 75, 100]} tickFormatter={v => `${v}%`} width={36} />
+        <Tooltip content={<ChartTooltip formatter={v => `${Number(v).toFixed(1)}%`} />} wrapperStyle={{ transition: 'none' }} />
+        <Area type="monotone" dataKey="occ" stroke="var(--ink)" strokeWidth={2}
+          fill="url(#occGrad)" dot={{ r: 3, fill: 'var(--ink)', strokeWidth: 0 }}
+          activeDot={{ r: 5, fill: 'var(--brass-deep)' }} />
+      </AreaChart>
+    </ResponsiveContainer>
   );
 }
 
@@ -235,18 +270,14 @@ export default function AnalyticsPage() {
       {/* ── Occupancy line chart ── */}
       <div style={{ marginBottom: 36 }}>
         <SectionHead title="Occupancy trend" caption={`by ${period}`} />
-        <div className="card" style={{ padding: 28 }}>
+        <div className="card" style={{ padding: '20px 16px 16px' }}>
           {occLoading
             ? <div style={{ padding: 40 }}><Spinner page /></div>
             : occSeries.length
               ? (
                 <>
                   <OccupancyLineChart series={occSeries} />
-                  <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8, fontSize: 10, color: 'var(--mute)', letterSpacing: '0.1em' }}>
-                    {occSeries.length > 0 && <span>{occSeries[0]?.date || occSeries[0]?.period || ''}</span>}
-                    {occSeries.length > 1 && <span>{occSeries[occSeries.length - 1]?.date || occSeries[occSeries.length - 1]?.period || ''}</span>}
-                  </div>
-                  <div style={{ display: 'flex', gap: 24, marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--hairline-2)' }}>
+                  <div style={{ display: 'flex', gap: 24, marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--hairline-2)' }}>
                     <Legend color="var(--ink)" label={`${period} occupancy`} />
                   </div>
                 </>

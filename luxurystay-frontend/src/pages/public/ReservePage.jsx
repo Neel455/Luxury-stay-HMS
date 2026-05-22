@@ -26,7 +26,6 @@ const SLUG_TONES = {
 
 const WEEKDAYS    = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const MONTHS      = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-const ROMAN_YEARS = { 2025:'MMXXV', 2026:'MMXXVI', 2027:'MMXXVII', 2028:'MMXXVIII' };
 
 function toISO(year, month, day) {
   return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
@@ -304,7 +303,7 @@ function StepDates({ dates, onDateChange }) {
     return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
   }
 
-  const monthLabel = `${MONTHS[calMonth - 1]} ${ROMAN_YEARS[calYear] || calYear}`;
+  const monthLabel = `${MONTHS[calMonth - 1]} ${calYear}`;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>

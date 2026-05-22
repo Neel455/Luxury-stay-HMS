@@ -86,14 +86,14 @@ function StatusChip({ status }) {
 
 // ─── Arrivals / Departures List ───────────────────────────────────────────────
 
-function CheckInList({ list, mode, onSelect, loading }) {
+function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
   const isArrival = mode === 'checkin';
 
   if (loading) return <div style={{ padding: 40 }}><Spinner page /></div>;
   if (!list.length) {
     return (
       <div className="t-wrap" style={{ padding: '40px 24px', textAlign: 'center', color: 'var(--mute)', fontSize: 13 }}>
-        No {isArrival ? 'arrivals' : 'departures'} today.
+        {emptyLabel || (isArrival ? 'No arrivals today.' : 'No departures today.')}
       </div>
     );
   }
@@ -448,6 +448,8 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+const TODAY_STR = new Date().toISOString().slice(0, 10);
+
 export default function CheckInPage() {
   const [tab, setTab]               = useState('checkin');
   const [selected, setSelected]     = useState(null);
@@ -455,12 +457,16 @@ export default function CheckInPage() {
 
   const { data: arrivalsData,   loading: arrivalsLoading }   = useApi('/api/reservations/today-arrivals',   { deps: [refreshKey] });
   const { data: departuresData, loading: departuresLoading } = useApi('/api/reservations/today-departures', { deps: [refreshKey] });
+  const { data: checkedInData,  loading: checkedInLoading }  = useApi('/api/reservations?status=checked-in&limit=200', { deps: [refreshKey] });
 
-  const arrivals   = arrivalsData?.arrivals   || [];
+  const arrivals   = arrivalsData?.arrivals    || [];
   const departures = departuresData?.departures || [];
+  const overdue    = (checkedInData?.reservations || []).filter(
+    r => r.checkOutDate && r.checkOutDate.slice(0, 10) < TODAY_STR
+  );
 
-  const list      = tab === 'checkin' ? arrivals : departures;
-  const loading   = tab === 'checkin' ? arrivalsLoading : departuresLoading;
+  const list    = tab === 'checkin' ? arrivals : tab === 'checkout' ? departures : overdue;
+  const loading = tab === 'checkin' ? arrivalsLoading : tab === 'checkout' ? departuresLoading : checkedInLoading;
 
   function switchTab(t) { setTab(t); setSelected(null); }
   function handleDone()  { setSelected(null); setRefreshKey(k => k + 1); }
@@ -488,13 +494,22 @@ export default function CheckInPage() {
           <button className={tab === 'checkout' ? 'active' : ''} onClick={() => switchTab('checkout')}>
             Departures · {departures.length}
           </button>
+          <button className={tab === 'overdue'  ? 'active' : ''} onClick={() => switchTab('overdue')}
+            style={{ position: 'relative' }}>
+            Overdue
+            {overdue.length > 0 && (
+              <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 9, background: 'var(--terracotta)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '0 4px' }}>
+                {overdue.length}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
       {selected ? (
         <CheckInDetail
           reservation={selected}
-          mode={tab}
+          mode={tab === 'overdue' ? 'checkout' : tab}
           onBack={() => setSelected(null)}
           onDone={handleDone}
           onUpdated={handleUpdated}
@@ -502,9 +517,10 @@ export default function CheckInPage() {
       ) : (
         <CheckInList
           list={list}
-          mode={tab}
+          mode={tab === 'overdue' ? 'checkout' : tab}
           onSelect={setSelected}
           loading={loading}
+          emptyLabel={tab === 'overdue' ? 'No overdue checkouts — all guests are within their stay dates.' : undefined}
         />
       )}
     </div>
