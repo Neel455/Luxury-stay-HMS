@@ -542,7 +542,9 @@ function NewMaintenanceModal({ onClose, onSaved, rooms }) {
     setSaving(true);
     try {
       await api.post('/api/maintenance', {
-        room:        form.room        || undefined,
+        ...(form.room
+          ? { room: form.room }
+          : { location: 'Common area / N/A' }),
         category:    form.category,
         priority:    form.priority,
         title:       form.title       || undefined,

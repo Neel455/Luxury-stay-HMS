@@ -10,7 +10,13 @@
       "Bash(git push *)",
       "Bash(New-Item -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-backend\\\\.env\" -ItemType File -Force)",
       "Bash(Out-Null)",
-      "Bash(Set-Content -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-backend\\\\.env\" -Encoding utf8 -Value \"NODE_ENV=development`nPORT=5000`nMONGODB_URI=mongodb+srv://shahneelsohail_db_user:Shahneel1@cluster0.vqyfyvj.mongodb.net/luxurystay?appName=Cluster0`nJWT_SECRET=ls_jwt_9f3k2m8x1p5q7w4n6r0t8y2u4i6o8a3s5d7f9g1h3j5k7l9z2x4c6v8b0`nJWT_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:3000`nRATE_LIMIT_WINDOW_MS=900000`nRATE_LIMIT_MAX=100\")"
+      "Bash(Set-Content -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-backend\\\\.env\" -Encoding utf8 -Value \"NODE_ENV=development`nPORT=5000`nMONGODB_URI=mongodb+srv://shahneelsohail_db_user:Shahneel1@cluster0.vqyfyvj.mongodb.net/luxurystay?appName=Cluster0`nJWT_SECRET=ls_jwt_9f3k2m8x1p5q7w4n6r0t8y2u4i6o8a3s5d7f9g1h3j5k7l9z2x4c6v8b0`nJWT_EXPIRES_IN=7d`nCORS_ORIGIN=http://localhost:3000`nRATE_LIMIT_WINDOW_MS=900000`nRATE_LIMIT_MAX=100\")",
+      "PowerShell(Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser)",
+      "PowerShell(Get-ExecutionPolicy -List)",
+      "PowerShell(npm --version)",
+      "Bash(Get-ChildItem -Path \"F:\\\\Aptech\\\\Luxury-stay-HMS\" -Directory)",
+      "Bash(Select-Object Name)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(json.dumps\\(d.get\\('scripts',{}\\), indent=2\\)\\)\")"
     ]
   }
 }

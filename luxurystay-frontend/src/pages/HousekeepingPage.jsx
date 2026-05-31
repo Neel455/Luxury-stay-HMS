@@ -269,7 +269,7 @@ export default function HousekeepingPage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const { data: taskData,  loading: taskLoading  } = useApi('/api/housekeeping?limit=200', { deps: [refreshKey] });
-  const { data: roomsData, loading: roomsLoading } = useApi('/api/rooms?limit=200');
+  const { data: roomsData, loading: roomsLoading } = useApi('/api/rooms?limit=200&isActive=true');
   const { data: staffData                        } = useApi('/api/users?role=housekeeping&limit=50');
 
   const tasks = taskData?.tasks || [];
