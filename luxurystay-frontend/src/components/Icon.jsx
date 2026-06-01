@@ -42,6 +42,7 @@ const PATHS = {
   spa:       <><path d="M12 22c-4 0-7-3-7-7 0-2.5 1-5 3-7 1 2 1 4 0 6 2-1 4-3 4-6 2 2 3 4 3 6a7 7 0 0 1-3 5.83" /><path d="M12 22V12" /></>,
   pool:      <><path d="M2 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0M2 18c2-2 4-2 6 0s4 2 6 0 4-2 6 0" /><circle cx="12" cy="6" r="2" /><path d="M12 8v2" /></>,
   edit:      <path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3" />,
+  menu:      <path d="M3 6h18M3 12h18M3 18h18" />,
 };
 
 export default function Icon({ name, size = 16, className = '', style = {} }) {

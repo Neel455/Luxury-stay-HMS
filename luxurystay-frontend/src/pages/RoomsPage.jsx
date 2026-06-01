@@ -3,6 +3,7 @@ import { useApi } from '../hooks/useApi';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Dropdown from '../components/Dropdown';
@@ -262,6 +263,7 @@ function OccupiedWarningModal({ roomNumber, onConfirm, onCancel }) {
 function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
   const toast = useToast();
   const queryClient = useQueryClient();
+  const { isMobile } = useBreakpoint();
   const [status, setStatus] = useState(room.status);
   const [note, setNote]     = useState(room.statusNote || '');
   const [saving, setSaving] = useState(false);
@@ -465,7 +467,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
           {/* Status section */}
           <div>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Status</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
               <div className="field" style={{ margin: 0 }}>
                 <label>Room status</label>
                 <Dropdown
@@ -523,7 +525,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
                       />
                     )}
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
                     <div className="field" style={{ margin: 0 }}>
                       <label>Check-in date</label>
                       <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} />
@@ -544,7 +546,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
               <div style={{ height: 1, background: 'var(--hairline)' }} />
               <div>
                 <div className="eyebrow" style={{ marginBottom: 12 }}>Rates &amp; capacity</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr 1fr', gap: 14 }}>
                   <div className="field" style={{ margin: 0 }}>
                     <label>Standard (€)</label>
                     <input type="number" value={priceStd} onChange={e => setPriceStd(e.target.value)} />
@@ -623,6 +625,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
 
 function AddRoomModal({ onClose, onSaved }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [form, setForm] = useState({
     roomNumber: '', floor: '', type: 'deluxe_king',
     maxGuests: 2,
@@ -675,7 +678,7 @@ function AddRoomModal({ onClose, onSaved }) {
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Room details</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
               <div className="field" style={{ margin: 0 }}>
                 <label>Room number</label>
                 <input value={form.roomNumber} onChange={e => set('roomNumber', e.target.value)} placeholder="e.g. 205" />
@@ -744,6 +747,7 @@ export default function RoomsPage() {
   const { user }  = useAuth();
   const toast     = useToast();
   const role      = user?.role;
+  const { isMobile, isTablet } = useBreakpoint();
   const queryClient = useQueryClient();
 
   const canManage      = ADMIN_MGR.includes(role);
@@ -790,8 +794,8 @@ export default function RoomsPage() {
             Live status across {rooms.length} rooms. Updates from housekeeping and maintenance flow here in real time.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <div className="switch">
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="switch" style={{ flexWrap: 'wrap' }}>
             {filterButtons.map(b => (
               <button key={b.id} className={filter === b.id ? 'active' : ''} onClick={() => setFilter(b.id)}>
                 {b.label}
@@ -824,7 +828,7 @@ export default function RoomsPage() {
               title={`${FLOOR_NAMES[floor] || `Floor ${floor}`} floor`}
               caption={`${filtered.filter(r => r.floor === floor).length} rooms`}
             />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(4, 1fr)', gap: 16 }}>
               {filtered.filter(r => r.floor === floor).map(r => (
                 <RoomCard
                   key={r.id || r._id}

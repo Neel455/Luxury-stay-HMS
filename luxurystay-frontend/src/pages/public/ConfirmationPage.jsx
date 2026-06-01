@@ -2,6 +2,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import PublicShell from '../../layouts/PublicShell';
 import Icon from '../../components/Icon';
 import Ornament from '../../components/Ornament';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 // Suite type → Photo tone (used for the NAME_TONES map — not a Photo here, kept for reference)
 const NAME_TONES = {
@@ -35,11 +36,12 @@ export default function ConfirmationPage() {
   const { state } = useLocation();
   const navigate  = useNavigate();
   const booking   = state?.booking;
+  const { isMobile, isTablet } = useBreakpoint();
 
   if (!booking) {
     return (
       <PublicShell>
-        <section style={{ padding: '100px 64px', maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
+        <section style={{ padding: isMobile ? '60px 24px' : '100px 64px', maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
           <Ornament>·  ★  ·</Ornament>
           <div className="eyebrow" style={{ margin: '24px 0 18px', color: 'var(--brass-deep)' }}>Nothing to show</div>
           <h1 className="display" style={{ fontSize: 'clamp(48px, 6vw, 80px)', margin: '0 0 20px', lineHeight: 1 }}>
@@ -92,10 +94,10 @@ export default function ConfirmationPage() {
 
   return (
     <PublicShell>
-      <section style={{ padding: '60px 64px 100px', maxWidth: 1080, margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '40px 20px 60px' : isTablet ? '48px 40px 80px' : '60px 64px 100px', maxWidth: 1080, margin: '0 auto' }}>
 
         {/* ── Centred header ──────────────────────────────────────────── */}
-        <div style={{ textAlign: 'center', marginBottom: 52 }}>
+        <div style={{ textAlign: 'center', marginBottom: isMobile ? 36 : 52 }}>
           <Ornament>·  ★  ·</Ornament>
           <div className="eyebrow" style={{ margin: '24px 0 18px', color: 'var(--brass-deep)' }}>
             Reservation confirmed
@@ -120,33 +122,35 @@ export default function ConfirmationPage() {
         {/* ── Ticket ──────────────────────────────────────────────────── */}
         <div style={{
           position: 'relative',
-          display: 'grid', gridTemplateColumns: '1.4fr 1fr',
+          display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr',
           border: '1px solid var(--ink)', background: 'var(--paper)',
         }}>
-          {/* Perforation line */}
-          <div style={{
-            position: 'absolute',
-            left: 'calc(58.3% - 0.5px)', top: 0, bottom: 0,
-            width: 1, borderLeft: '2px dashed var(--hairline)',
-            pointerEvents: 'none',
-          }} />
-          {/* Notch top */}
-          <div style={{
-            position: 'absolute',
-            left: 'calc(58.3% - 8px)', top: -8,
-            width: 16, height: 16, borderRadius: '50%',
-            background: 'var(--ivory)', border: '1px solid var(--ink)',
-          }} />
-          {/* Notch bottom */}
-          <div style={{
-            position: 'absolute',
-            left: 'calc(58.3% - 8px)', bottom: -8,
-            width: 16, height: 16, borderRadius: '50%',
-            background: 'var(--ivory)', border: '1px solid var(--ink)',
-          }} />
+          {/* Perforation line — only visible when side-by-side */}
+          {!isTablet && (
+            <>
+              <div style={{
+                position: 'absolute',
+                left: 'calc(58.3% - 0.5px)', top: 0, bottom: 0,
+                width: 1, borderLeft: '2px dashed var(--hairline)',
+                pointerEvents: 'none',
+              }} />
+              <div style={{
+                position: 'absolute',
+                left: 'calc(58.3% - 8px)', top: -8,
+                width: 16, height: 16, borderRadius: '50%',
+                background: 'var(--ivory)', border: '1px solid var(--ink)',
+              }} />
+              <div style={{
+                position: 'absolute',
+                left: 'calc(58.3% - 8px)', bottom: -8,
+                width: 16, height: 16, borderRadius: '50%',
+                background: 'var(--ivory)', border: '1px solid var(--ink)',
+              }} />
+            </>
+          )}
 
           {/* ── Left panel ── */}
-          <div style={{ padding: 48 }}>
+          <div style={{ padding: isMobile ? 24 : 48 }}>
             {/* Brand + confirmation number */}
             <div style={{
               display: 'flex', justifyContent: 'space-between',
@@ -167,7 +171,7 @@ export default function ConfirmationPage() {
             </div>
 
             {/* Detail rows */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 32 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20, marginBottom: 32 }}>
               <ConfirmRow
                 l="Guest"
                 v={contactName}
@@ -212,7 +216,7 @@ export default function ConfirmationPage() {
           </div>
 
           {/* ── Right panel (linen) ── */}
-          <div style={{ padding: 48, background: 'var(--linen)' }}>
+          <div style={{ padding: isMobile ? 24 : 48, background: 'var(--linen)', borderTop: isTablet ? '1px solid var(--ink)' : 'none' }}>
             <div className="eyebrow" style={{ marginBottom: 16 }}>Folio total</div>
             <div className="display numeral" style={{ fontSize: 52, lineHeight: 1, fontStyle: 'italic', marginBottom: 6 }}>
               €{totalAmt.toLocaleString()}
@@ -281,7 +285,7 @@ export default function ConfirmationPage() {
         <div style={{ marginTop: 64 }}>
           <div className="eyebrow" style={{ marginBottom: 18 }}>What happens next</div>
           <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+            display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
             gap: 1, background: 'var(--hairline)',
             border: '1px solid var(--hairline)',
           }}>

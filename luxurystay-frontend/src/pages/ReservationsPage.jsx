@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../lib/api';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import Icon from '../components/Icon';
 import Dropdown from '../components/Dropdown';
 import Spinner from '../components/Spinner';
@@ -165,6 +166,7 @@ function GuestSearch({ value, onChange }) {
 
 function NewReservationModal({ onClose, onCreated }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [step, setStep]           = useState(1); // 1 = dates+guests, 2 = room+details
   const [guest, setGuest]         = useState(null);
   const [checkIn, setCheckIn]     = useState('');
@@ -253,7 +255,7 @@ function NewReservationModal({ onClose, onCreated }) {
                 <label>Guest</label>
                 <GuestSearch value={guest} onChange={setGuest} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div className="field">
                   <label>Check-in date</label>
                   <input type="date" value={checkIn} onChange={e => setCheckIn(e.target.value)} min={isoDate(new Date())} />
@@ -268,7 +270,7 @@ function NewReservationModal({ onClose, onCreated }) {
                   {nights} night{nights !== 1 ? 's' : ''}
                 </div>
               )}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div className="field">
                   <label>Adults</label>
                   <input type="number" min="1" max="20" value={adults} onChange={e => setAdults(e.target.value)} />
@@ -320,7 +322,7 @@ function NewReservationModal({ onClose, onCreated }) {
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div className="field">
                   <label>Source</label>
                   <Dropdown
@@ -339,7 +341,7 @@ function NewReservationModal({ onClose, onCreated }) {
                 <label>Special requests</label>
                 <input value={specialRequests} onChange={e => setSpecialRequests(e.target.value)} placeholder="Dietary needs, accessibility, preferences…" />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16 }}>
                 <div className="field">
                   <label>Deposit amount (€)</label>
                   <input type="number" min="0" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} placeholder="0" />
@@ -379,6 +381,7 @@ function NewReservationModal({ onClose, onCreated }) {
 
 function ReservationDetail({ reservation: r, onClose, onCancelled }) {
   const toast   = useToast();
+  const { isMobile } = useBreakpoint();
   const [cancelling,   setCancelling]   = useState(false);
 
   async function cancel() {
@@ -402,7 +405,7 @@ function ReservationDetail({ reservation: r, onClose, onCancelled }) {
     <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', justifyContent: 'flex-end' }}>
       <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(26,24,20,0.3)' }} />
       <div style={{
-        position: 'relative', width: 480, background: 'var(--paper)',
+        position: 'relative', width: isMobile ? '100vw' : 480, maxWidth: '100%', background: 'var(--paper)',
         borderLeft: '1px solid var(--hairline)', height: '100%', overflowY: 'auto',
         display: 'flex', flexDirection: 'column',
       }}>
@@ -677,7 +680,8 @@ function ReservationCalendar({ onSelect, refreshKey }) {
       </div>
 
       {loading ? <Spinner page /> : (
-        <div className="card" style={{ overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+        <div className="card" style={{ overflow: 'hidden', minWidth: 640 }}>
           {/* Header row */}
           <div style={{ display: 'grid', gridTemplateColumns: '180px repeat(7, 1fr)', borderBottom: '1px solid var(--hairline)' }}>
             <div style={{ padding: '14px 20px', borderRight: '1px solid var(--hairline)', fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--mute)' }}>Room</div>
@@ -756,6 +760,7 @@ function ReservationCalendar({ onSelect, refreshKey }) {
             );
           })}
         </div>
+        </div>
       )}
     </>
   );
@@ -764,6 +769,7 @@ function ReservationCalendar({ onSelect, refreshKey }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ReservationsPage() {
+  const { isMobile } = useBreakpoint();
   const [view,        setView]        = useState('list');
   const [showNew,     setShowNew]     = useState(false);
   const [selected,    setSelected]    = useState(null);
@@ -788,11 +794,13 @@ export default function ReservationsPage() {
           <h1 className="display">The <em>book of</em> guests.</h1>
           <p className="sub">Manage arrivals, room assignments, and reservations. Click any row to view details.</p>
         </div>
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <div className="switch">
-            <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>Calendar</button>
-            <button className={view === 'list'     ? 'active' : ''} onClick={() => setView('list')}>List</button>
-          </div>
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {!isMobile && (
+            <div className="switch">
+              <button className={view === 'calendar' ? 'active' : ''} onClick={() => setView('calendar')}>Calendar</button>
+              <button className={view === 'list'     ? 'active' : ''} onClick={() => setView('list')}>List</button>
+            </div>
+          )}
           <button className="btn btn-primary" onClick={() => setShowNew(true)}>
             <Icon name="plus" size={12} />New reservation
           </button>

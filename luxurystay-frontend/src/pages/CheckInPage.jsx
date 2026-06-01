@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -87,6 +88,7 @@ function StatusChip({ status }) {
 // ─── Arrivals / Departures List ───────────────────────────────────────────────
 
 function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
+  const { isMobile } = useBreakpoint();
   const isArrival = mode === 'checkin';
 
   if (loading) return <div style={{ padding: 40 }}><Spinner page /></div>;
@@ -114,7 +116,7 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
 
   return (
     <>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 28 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 28 }}>
         {summary.map((summary, i) => <MetricTile key={i} label={summary.label} value={summary.value} />)}
       </div>
 
@@ -198,6 +200,7 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
 
 function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
   const toast = useToast();
+  const { isMobile, isTablet } = useBreakpoint();
   const isArrival = mode === 'checkin';
 
   const [checklist, setChecklist] = useState(() => checklistFromPreferences(reservation.stayPreferences));
@@ -280,7 +283,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
         <Icon name="arrow_left" size={12} />Back to {isArrival ? 'arrivals' : 'departures'}
       </button>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr', gap: isMobile ? 20 : 32 }}>
         {/* ── Left: main form ── */}
         <div>
           <div className="card" style={{ padding: 32 }}>
@@ -298,7 +301,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
 
             {isArrival ? (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 24, marginBottom: 28 }}>
                   <div className="field">
                     <label>Guest name</label>
                     <input readOnly value={fullName} />
@@ -350,7 +353,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
 
                 <div className="rule"><div className="dot" /></div>
                 <div className="eyebrow" style={{ marginBottom: 14 }}>Stay preferences</div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 12, marginBottom: 28 }}>
                   {checklistItems.map((p, i) => (
                     <label key={i}
                       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--hairline)', borderRadius: 2, fontSize: 12, cursor: 'default', background: checklist[p] ? 'var(--linen)' : 'transparent', color: checklist[p] ? 'var(--ink)' : 'var(--mute)' }}>
@@ -373,7 +376,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
                 </div>
                 <div className="rule"><div className="dot" /></div>
                 <div className="eyebrow" style={{ marginBottom: 14 }}>Departure checklist</div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: 24 }}>
                   {checklistItems.map((p, i) => (
                     <label key={i} onClick={() => setChecklist(c => ({ ...c, [p]: !c[p] }))}
                       style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', border: '1px solid var(--hairline)', borderRadius: 2, fontSize: 12, cursor: 'pointer', background: checklist[p] ? 'var(--linen)' : 'transparent' }}>
@@ -451,6 +454,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
 const TODAY_STR = new Date().toISOString().slice(0, 10);
 
 export default function CheckInPage() {
+  const { isMobile } = useBreakpoint();
   const [tab, setTab]               = useState('checkin');
   const [selected, setSelected]     = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -487,7 +491,7 @@ export default function CheckInPage() {
             Departures are auto-routed to billing on completion.
           </p>
         </div>
-        <div className="switch">
+        <div className="switch" style={{ flexWrap: 'wrap' }}>
           <button className={tab === 'checkin'  ? 'active' : ''} onClick={() => switchTab('checkin')}>
             Arrivals · {arrivals.length}
           </button>

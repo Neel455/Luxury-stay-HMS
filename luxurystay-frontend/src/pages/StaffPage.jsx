@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -81,6 +82,7 @@ function Toggle({ on }) {
 
 function StaffModal({ staff, onClose, onSaved }) {
   const toast  = useToast();
+  const { isMobile } = useBreakpoint();
   const isEdit = !!staff;
   const [form, setForm] = useState({
     name:     staff?.name     || '',
@@ -130,7 +132,7 @@ function StaffModal({ staff, onClose, onSaved }) {
         </div>
 
         <div className="modal-body">
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div className="field" style={{ margin: 0, gridColumn: '1/-1' }}>
               <label>Full name *</label>
               <input value={form.name} onChange={e => set('name', e.target.value)} autoFocus />
@@ -173,6 +175,7 @@ function StaffModal({ staff, onClose, onSaved }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function StaffPage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const toast = useToast();
   const [selected,    setSelected]    = useState(null);
   const [editing,     setEditing]     = useState(null);
@@ -232,7 +235,7 @@ export default function StaffPage() {
 
       {/* ── Role filter ── */}
       <div style={{ marginBottom: 20 }}>
-        <div className="switch">
+        <div className="switch" style={{ flexWrap: 'wrap' }}>
           {[{ id: 'all', label: 'All' }, ...ROLES.map(r => ({ id: r, label: ROLE_LABELS[r] }))].map(b => (
             <button key={b.id} className={roleFilter === b.id ? 'active' : ''} onClick={() => setRoleFilter(b.id)}>
               {b.label}
@@ -242,7 +245,7 @@ export default function StaffPage() {
       </div>
 
       {/* ── Two-col layout ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr', gap: isMobile ? 20 : 32 }}>
         {/* Staff table */}
         <div>
           {loading ? (

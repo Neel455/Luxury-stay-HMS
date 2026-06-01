@@ -6,6 +6,7 @@ import api from '../../lib/api';
 import { useToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../hooks/useApi';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const SUBJECTS = [
   { value: 'reservation', label: 'Reservation enquiry'               },
@@ -133,6 +134,7 @@ function FeedbackSection({ reservations }) {
 export default function ContactPage() {
   const toast = useToast();
   const { user, isAuthenticated } = useAuth();
+  const { isMobile, isTablet } = useBreakpoint();
 
   const isGuest = isAuthenticated && user?.role === 'guest';
   const { data: resData } = useApi(isGuest ? '/api/guest/reservations' : null);
@@ -190,10 +192,10 @@ export default function ContactPage() {
     <PublicShell>
 
       {/* ── Section 1: Intro header ──────────────────────────────────── */}
-      <section style={{ padding: '60px 64px 40px', maxWidth: 1440, margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '40px 24px 32px' : isTablet ? '48px 40px 32px' : '60px 64px 40px', maxWidth: 1440, margin: '0 auto' }}>
         <div className="eyebrow" style={{ marginBottom: 18 }}>Folio VI · Correspondence</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 64, alignItems: 'end' }}>
-          <h1 className="display" style={{ fontSize: 'clamp(52px, 7vw, 88px)', margin: 0, lineHeight: 1.02 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.2fr 1fr', gap: isTablet ? 24 : 64, alignItems: 'end' }}>
+          <h1 className="display" style={{ fontSize: 'clamp(40px, 7vw, 88px)', margin: 0, lineHeight: 1.02 }}>
             A note, <em>before</em><br />you arrive.
           </h1>
           <p style={{ fontSize: 16, color: 'var(--ink-3)', lineHeight: 1.75, fontFamily: 'var(--serif)', maxWidth: 460, margin: 0 }}>
@@ -204,7 +206,7 @@ export default function ContactPage() {
       </section>
 
       {/* ── Section 2: Map + channels ────────────────────────────────── */}
-      <section style={{ padding: '60px 64px 60px', maxWidth: 1440, margin: '0 auto', display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 40 }}>
+      <section style={{ padding: isMobile ? '32px 24px 40px' : isTablet ? '40px 40px 48px' : '60px 64px 60px', maxWidth: 1440, margin: '0 auto', display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr', gap: isTablet ? 40 : 40 }}>
 
         {/* SVG faux map */}
         <div style={{
@@ -295,7 +297,7 @@ export default function ContactPage() {
       </section>
 
       {/* ── Section 3: Hours + form ──────────────────────────────────── */}
-      <section style={{ padding: '40px 64px 100px', maxWidth: 1440, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1.4fr', gap: 48, alignItems: 'start' }}>
+      <section style={{ padding: isMobile ? '32px 24px 80px' : isTablet ? '40px 40px 80px' : '40px 64px 100px', maxWidth: 1440, margin: '0 auto', display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1fr 1.4fr', gap: 48, alignItems: 'start' }}>
 
         {/* Hours table */}
         <div>
@@ -350,7 +352,7 @@ export default function ContactPage() {
             </button>
           </div>
         ) : (
-          <div className="card" style={{ padding: 40, alignSelf: 'start' }}>
+          <div className="card" style={{ padding: isMobile ? 20 : 40, alignSelf: 'start' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 24 }}>
               <div className="eyebrow">Send a message</div>
               <div style={{ fontSize: 12, color: 'var(--brass-deep)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 600 }}>
@@ -359,7 +361,7 @@ export default function ContactPage() {
             </div>
 
             <form onSubmit={handleSubmit} noValidate>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 18 }}>
 
                 {/* First name */}
                 <div className="field">
@@ -463,7 +465,13 @@ export default function ContactPage() {
               </div>
 
               {/* Form footer */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 24 }}>
+              <div style={{
+                display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
+                alignItems: isMobile ? 'stretch' : 'center',
+                justifyContent: 'space-between',
+                gap: 16, marginTop: 24,
+              }}>
                 <div style={{ fontSize: 12, color: 'var(--mute)', fontWeight: 500 }}>
                   By writing, you accept our discretion policy.
                 </div>
@@ -471,7 +479,7 @@ export default function ContactPage() {
                   type="submit"
                   className="btn btn-primary"
                   disabled={loading}
-                  style={{ padding: '14px 30px', opacity: loading ? 0.7 : 1 }}
+                  style={{ padding: isMobile ? '14px' : '14px 30px', justifyContent: 'center', opacity: loading ? 0.7 : 1 }}
                 >
                   {loading
                     ? <><div className="spinner" style={{ width: 14, height: 14, borderWidth: 1.5, borderTopColor: 'var(--ivory)' }} />Sending…</>
@@ -486,7 +494,7 @@ export default function ContactPage() {
 
       {/* ── Feedback (authenticated guests only) ─────────────────────── */}
       {isGuest && (
-        <section style={{ borderTop: '1px solid var(--hairline)', padding: '80px 64px', maxWidth: 1440, margin: '0 auto' }}>
+        <section style={{ borderTop: '1px solid var(--hairline)', padding: isMobile ? '48px 24px' : isTablet ? '60px 40px' : '80px 64px', maxWidth: 1440, margin: '0 auto' }}>
           <div className="eyebrow" style={{ marginBottom: 20 }}>Share your experience</div>
           <h2 className="display" style={{ fontSize: 'clamp(36px, 4vw, 56px)', margin: '0 0 16px', lineHeight: 1 }}>
             Share your <em>experience.</em>

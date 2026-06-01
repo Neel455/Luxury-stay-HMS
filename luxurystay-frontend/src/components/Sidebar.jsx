@@ -38,7 +38,7 @@ function getRoleTitle(role) {
   return titles[role] || role;
 }
 
-export default function Sidebar() {
+export default function Sidebar({ open = false, onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -53,7 +53,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${open ? ' open' : ''}`}>
       <div className="sidebar-brand">
         <div className="mark">
           <span className="name">Luxury</span><span className="suf">STAY</span>

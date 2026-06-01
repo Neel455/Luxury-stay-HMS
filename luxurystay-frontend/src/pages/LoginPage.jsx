@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 
@@ -48,6 +49,7 @@ export default function LoginPage() {
   const toast    = useToast();
   const navigate = useNavigate();
   const location = useLocation();
+  const { isMobile, isTablet } = useBreakpoint();
 
   const from = location.state?.from?.pathname;
 
@@ -180,88 +182,118 @@ export default function LoginPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      display: 'grid',
-      gridTemplateColumns: '1.1fr 1fr',
+      display: isTablet ? 'flex' : 'grid',
+      flexDirection: isTablet ? 'column' : undefined,
+      gridTemplateColumns: isTablet ? undefined : '1.1fr 1fr',
       background: 'var(--ivory)',
     }}>
 
-      {/* ── Left dark panel ──────────────────────────────────────────── */}
-      <div style={{
-        background: 'linear-gradient(160deg, #2A2620 0%, #1A1814 100%)',
-        color: 'var(--ivory)',
-        padding: '56px 56px 56px 64px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Brass radial glow */}
+      {/* ── Left dark panel (desktop) / Top dark banner (tablet+mobile) ── */}
+      {!isTablet ? (
+        /* ── Full-height desktop side panel ── */
         <div style={{
-          position: 'absolute', inset: 0,
-          background: 'radial-gradient(circle at 70% 25%, rgba(160, 128, 84, 0.22), transparent 55%)',
-          pointerEvents: 'none',
-        }} />
-
-        {/* Watermark ★ */}
-        <div style={{
-          position: 'absolute',
-          top: 40, right: 56,
-          fontFamily: 'var(--serif)',
-          fontSize: 300,
-          fontStyle: 'italic',
-          color: 'rgba(160, 128, 84, 0.08)',
-          lineHeight: 0.8,
-          pointerEvents: 'none',
-          userSelect: 'none',
-        }}>★</div>
-
-        {/* Brand */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontFamily: 'var(--serif)', fontSize: 30, fontStyle: 'italic' }}>Luxury</span>
-            <span style={{ fontFamily: 'var(--serif)', fontSize: 30, letterSpacing: '0.04em' }}>STAY</span>
-          </div>
-          <div style={{ fontSize: 12, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'var(--brass-soft)', marginTop: 10, fontWeight: 600 }}>
-            One door · every guest
-          </div>
-        </div>
-
-        {/* Quote */}
-        <div style={{ position: 'relative' }}>
-          <div style={{ width: 60, height: 1, background: 'var(--brass)', marginBottom: 28 }} />
-          <div className="display display-italic" style={{
-            fontSize: 64, lineHeight: 1.02,
-            maxWidth: 560, color: 'var(--ivory)',
-            letterSpacing: '-0.01em',
-          }}>
-            "Service is the architecture of memory."
-          </div>
-          <div style={{ marginTop: 28, fontSize: 12, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--brass-soft)', fontWeight: 600 }}>
-            — House motto · MCMXXIV
-          </div>
-        </div>
-
-        {/* Footer line */}
-        <div style={{
+          background: 'linear-gradient(160deg, #2A2620 0%, #1A1814 100%)',
+          color: 'var(--ivory)',
+          padding: '56px 56px 56px 64px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
           position: 'relative',
-          display: 'flex', justifyContent: 'space-between',
-          fontSize: 12, color: 'var(--mute-2)',
-          letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 500,
+          overflow: 'hidden',
         }}>
-          <span>Maison Étoile · Côte d'Azur</span>
-          <span>Vol. CII · MMXXVI</span>
-        </div>
-      </div>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 70% 25%, rgba(160,128,84,0.22), transparent 55%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', top: 40, right: 56, fontFamily: 'var(--serif)', fontSize: 300, fontStyle: 'italic', color: 'rgba(160,128,84,0.08)', lineHeight: 0.8, pointerEvents: 'none', userSelect: 'none' }}>★</div>
 
-      {/* ── Right light panel ────────────────────────────────────────── */}
-      <div style={{ padding: 56, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto' }}>
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontFamily: 'var(--serif)', fontSize: 30, fontStyle: 'italic' }}>Luxury</span>
+              <span style={{ fontFamily: 'var(--serif)', fontSize: 30, letterSpacing: '0.04em' }}>STAY</span>
+            </div>
+            <div style={{ fontSize: 12, letterSpacing: '0.26em', textTransform: 'uppercase', color: 'var(--brass-soft)', marginTop: 10, fontWeight: 600 }}>
+              One door · every guest
+            </div>
+          </div>
+
+          <div style={{ position: 'relative' }}>
+            <div style={{ width: 60, height: 1, background: 'var(--brass)', marginBottom: 28 }} />
+            <div className="display display-italic" style={{ fontSize: 64, lineHeight: 1.02, maxWidth: 560, color: 'var(--ivory)', letterSpacing: '-0.01em' }}>
+              "Service is the architecture of memory."
+            </div>
+            <div style={{ marginTop: 28, fontSize: 12, letterSpacing: '0.20em', textTransform: 'uppercase', color: 'var(--brass-soft)', fontWeight: 600 }}>
+              — House motto · MCMXXIV
+            </div>
+          </div>
+
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'var(--mute-2)', letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 500 }}>
+            <span>Maison Étoile · Côte d'Azur</span>
+            <span>Vol. CII · MMXXVI</span>
+          </div>
+        </div>
+      ) : (
+        /* ── Compact dark banner for tablet / mobile ── */
+        <div style={{
+          background: 'linear-gradient(160deg, #2A2620 0%, #1A1814 100%)',
+          color: 'var(--ivory)',
+          padding: isMobile ? '28px 24px' : '32px 40px',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: isMobile ? 'flex-start' : 'center',
+          flexDirection: isMobile ? 'column' : 'row',
+          justifyContent: 'space-between',
+          gap: isMobile ? 16 : 0,
+        }}>
+          {/* Brass glow */}
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 80% 50%, rgba(160,128,84,0.25), transparent 60%)', pointerEvents: 'none' }} />
+          {/* Watermark */}
+          <div style={{ position: 'absolute', right: isMobile ? -10 : 20, top: -10, fontFamily: 'var(--serif)', fontSize: isMobile ? 140 : 180, fontStyle: 'italic', color: 'rgba(160,128,84,0.07)', lineHeight: 0.8, pointerEvents: 'none', userSelect: 'none' }}>★</div>
+
+          {/* Brand */}
+          <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ fontFamily: 'var(--serif)', fontSize: isMobile ? 24 : 28, fontStyle: 'italic', color: 'var(--ivory)' }}>Luxury</span>
+              <span style={{ fontFamily: 'var(--serif)', fontSize: isMobile ? 24 : 28, letterSpacing: '0.04em', color: 'var(--ivory)' }}>STAY</span>
+            </div>
+            <div style={{ fontSize: 10, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--brass-soft)', marginTop: 6, fontWeight: 600 }}>
+              Maison Étoile · Côte d'Azur
+            </div>
+          </div>
+
+          {/* Quote — hide on very narrow mobile */}
+          {!isMobile && (
+            <div style={{ position: 'relative', textAlign: 'right' }}>
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 15, fontStyle: 'italic', color: 'rgba(247,243,236,0.7)', lineHeight: 1.5, maxWidth: 320 }}>
+                "Service is the architecture of memory."
+              </div>
+              <div style={{ fontSize: 10, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--brass-soft)', marginTop: 8, fontWeight: 600 }}>
+                — House motto · MCMXXIV
+              </div>
+            </div>
+          )}
+
+          {/* Quote inline on mobile */}
+          {isMobile && (
+            <div style={{ position: 'relative' }}>
+              <div style={{ width: 36, height: 1, background: 'var(--brass)', marginBottom: 10 }} />
+              <div style={{ fontFamily: 'var(--serif)', fontSize: 14, fontStyle: 'italic', color: 'rgba(247,243,236,0.65)', lineHeight: 1.55 }}>
+                "Service is the architecture of memory."
+              </div>
+              <div style={{ fontSize: 10, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--brass-soft)', marginTop: 8, fontWeight: 600 }}>
+                — House motto · MCMXXIV
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Form panel ───────────────────────────────────────────────── */}
+      <div style={{ padding: isMobile ? '36px 24px 48px' : isTablet ? '48px 40px' : 56, display: 'flex', flexDirection: 'column', justifyContent: 'center', overflowY: 'auto', flex: isTablet ? '1' : undefined }}>
         <div style={{ maxWidth: 460, margin: '0 auto', width: '100%' }}>
 
           <div className="eyebrow" style={{ marginBottom: 14 }}>
             {tab === 'signup' ? 'Create your account' : 'Welcome back'}
           </div>
-          <h1 className="display" style={{ fontSize: 60, margin: '0 0 12px', lineHeight: 1 }}>
+          <h1 className="display" style={{ fontSize: isMobile ? 48 : 60, margin: '0 0 12px', lineHeight: 1 }}>
             {tab === 'signup' ? <>Begin your <em>residency.</em></> : <>Sign <em>in.</em></>}
           </h1>
           <p style={{ color: 'var(--ink-3)', marginBottom: 28, fontSize: 14, lineHeight: 1.6, fontFamily: 'var(--serif)', fontStyle: 'italic' }}>
@@ -434,7 +466,7 @@ export default function LoginPage() {
                 </p>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: (regFieldErrors.password || regFieldErrors.confirmPassword) ? 6 : 14 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12, marginBottom: (regFieldErrors.password || regFieldErrors.confirmPassword) ? 6 : 14 }}>
                 <div className="field">
                   <label>Password <span style={{ color: 'var(--terracotta)' }}>*</span></label>
                   <div style={{ position: 'relative' }}>

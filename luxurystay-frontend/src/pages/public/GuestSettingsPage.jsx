@@ -5,11 +5,13 @@ import { useToast } from '../../context/ToastContext';
 import api from '../../lib/api';
 import PublicShell from '../../layouts/PublicShell';
 import Icon from '../../components/Icon';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 export default function GuestSettingsPage() {
   const navigate               = useNavigate();
   const { user, isAuthenticated, refreshUser } = useAuth();
   const toast                  = useToast();
+  const { isMobile }           = useBreakpoint();
 
   // Redirect if not an authenticated guest
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function GuestSettingsPage() {
 
   return (
     <PublicShell>
-      <section style={{ padding: '60px 64px 80px', maxWidth: 1280, margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '40px 24px 60px' : '60px 64px 80px', maxWidth: 1280, margin: '0 auto' }}>
 
         {/* ── Page header ──────────────────────────────────────────────── */}
         <div style={{ marginBottom: 48 }}>
@@ -60,7 +62,7 @@ export default function GuestSettingsPage() {
         </div>
 
         {/* ── Two-column grid ───────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: isMobile ? 32 : 48, alignItems: 'start' }}>
 
           {/* Left — Personal details */}
           <div>

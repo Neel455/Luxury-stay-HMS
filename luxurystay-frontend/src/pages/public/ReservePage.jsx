@@ -7,6 +7,7 @@ import Photo from '../../components/Photo';
 import api from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 // Suite name / slug → Photo tone
 const NAME_TONES = {
@@ -73,6 +74,7 @@ const BACK_LABELS = ['Dates', 'Suite', 'Guest'];
 // ─── Step Indicator ──────────────────────────────────────────────────────────
 
 function StepIndicator({ step }) {
+  const { isMobile } = useBreakpoint();
   const steps = [
     { n: 'I',   l: 'Dates'   },
     { n: 'II',  l: 'Suite'   },
@@ -80,34 +82,39 @@ function StepIndicator({ step }) {
     { n: 'IV',  l: 'Confirm' },
   ];
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 36 }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 14, marginBottom: 32 }}>
       {steps.map((s, i) => {
         const done    = i < step;
         const current = i === step;
         return (
           <Fragment key={i}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 6 : 10, flexShrink: 0 }}>
               <div style={{
-                width: 32, height: 32, borderRadius: '50%', flexShrink: 0,
+                width: isMobile ? 28 : 32, height: isMobile ? 28 : 32,
+                borderRadius: '50%', flexShrink: 0,
                 background: done ? 'var(--ink)' : current ? 'var(--brass)' : 'transparent',
                 border: done || current ? 'none' : '1px solid var(--hairline)',
                 color: done || current ? 'var(--paper)' : 'var(--mute)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontFamily: 'var(--serif)', fontSize: 14, fontStyle: 'italic',
+                fontFamily: 'var(--serif)', fontSize: isMobile ? 12 : 14, fontStyle: 'italic',
               }}>
-                {done ? <Icon name="check" size={12} /> : s.n}
+                {done ? <Icon name="check" size={isMobile ? 10 : 12} /> : s.n}
               </div>
-              <span style={{
-                fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase',
-                color: current ? 'var(--ink)' : done ? 'var(--ink-3)' : 'var(--mute)',
-                fontWeight: current ? 700 : 500,
-              }}>
-                {s.l}
-              </span>
+              {/* hide labels on mobile — circles + connectors communicate progress clearly */}
+              {!isMobile && (
+                <span style={{
+                  fontSize: 12, letterSpacing: '0.14em', textTransform: 'uppercase',
+                  color: current ? 'var(--ink)' : done ? 'var(--ink-3)' : 'var(--mute)',
+                  fontWeight: current ? 700 : 500,
+                }}>
+                  {s.l}
+                </span>
+              )}
             </div>
             {i < steps.length - 1 && (
               <div style={{
-                flex: 1, height: 1, maxWidth: 80,
+                flex: 1, height: 1,
+                maxWidth: isMobile ? 'none' : 80,
                 background: done ? 'var(--ink)' : 'var(--hairline)',
               }} />
             )}
@@ -121,9 +128,10 @@ function StepIndicator({ step }) {
 // ─── Folio Rail ──────────────────────────────────────────────────────────────
 
 function FolioRail({ suite, nights, subtotal, tax, total, cancelBy, onContinue, ctaLabel, canContinue, submitting = false }) {
+  const { isTablet } = useBreakpoint();
   const spaFree = nights >= 3;
   return (
-    <div style={{ position: 'sticky', top: 110, alignSelf: 'start' }}>
+    <div style={ isTablet ? {} : { position: 'sticky', top: 110, alignSelf: 'start' }}>
       <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
         {suite && (
           <Photo
@@ -255,6 +263,7 @@ function Stepper({ label, value, onChange, min, max }) {
 // ─── Step 1 — Dates ──────────────────────────────────────────────────────────
 
 function StepDates({ dates, onDateChange }) {
+  const { isMobile } = useBreakpoint();
   const today = new Date();
   const [calYear,  setCalYear]  = useState(today.getFullYear());
   const [calMonth, setCalMonth] = useState(today.getMonth() + 1);
@@ -309,7 +318,7 @@ function StepDates({ dates, onDateChange }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
       {/* Date summary + calendar */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 16 : 32 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 24, flexWrap: 'wrap', gap: 16 }}>
           <div>
             <div className="eyebrow" style={{ marginBottom: 6 }}>Arrival → Departure</div>
@@ -392,7 +401,7 @@ function StepDates({ dates, onDateChange }) {
       </div>
 
       {/* Guests stepper */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 16 : 32 }}>
         <div className="eyebrow" style={{ marginBottom: 18 }}>Guests</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
           <Stepper label="Adults"   value={dates.adults}   onChange={v => onDateChange('adults', v)}   min={1} max={6} />
@@ -420,7 +429,7 @@ function StepDates({ dates, onDateChange }) {
 
 // ─── Step 2 — Suite ──────────────────────────────────────────────────────────
 
-function StepSuite({ dates, selectedSuite, onSelect }) {
+function StepSuite({ dates, selectedSuite, onSelect, isMobile }) {
   const [allSuites, setAllSuites] = useState([]);
   const [available, setAvailable] = useState([]);
   const [loading,   setLoading]   = useState(true);
@@ -490,7 +499,7 @@ function StepSuite({ dates, selectedSuite, onSelect }) {
             key={s.id || i}
             onClick={() => s.available && onSelect({ name: s.name, tone: s.tone, rate: s.rate, total: s.total })}
             style={{
-              display: 'grid', gridTemplateColumns: '240px 1fr auto',
+              display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '240px 1fr auto',
               gap: 0, overflow: 'hidden',
               border: isSelected ? '2px solid var(--brass)' : '1px solid var(--hairline)',
               background: 'var(--paper)',
@@ -503,7 +512,7 @@ function StepSuite({ dates, selectedSuite, onSelect }) {
             <Photo tone={s.tone} ratio="4/3" num={s.num} />
 
             {/* Details */}
-            <div style={{ padding: '28px 28px 28px 32px' }}>
+            <div style={{ padding: isMobile ? 16 : '28px 28px 28px 32px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 6 }}>
                 <h3 className="display" style={{ fontSize: 28, margin: 0, lineHeight: 1 }}>{s.name}</h3>
                 {s.sqm && <span style={{ fontSize: 12, color: 'var(--mute)' }}>{s.sqm} m²</span>}
@@ -535,10 +544,12 @@ function StepSuite({ dates, selectedSuite, onSelect }) {
 
             {/* Price + select */}
             <div style={{
-              padding: '28px 28px', borderLeft: '1px solid var(--hairline-2)',
-              display: 'flex', flexDirection: 'column',
-              justifyContent: 'space-between', alignItems: 'flex-end',
-              textAlign: 'right', minWidth: 180,
+              padding: isMobile ? '16px 20px 20px' : '28px 28px',
+              borderLeft: isMobile ? 'none' : '1px solid var(--hairline-2)',
+              borderTop: isMobile ? '1px solid var(--hairline-2)' : 'none',
+              display: 'flex', flexDirection: isMobile ? 'row' : 'column',
+              justifyContent: 'space-between', alignItems: isMobile ? 'center' : 'flex-end',
+              textAlign: isMobile ? 'left' : 'right', minWidth: isMobile ? 0 : 180,
               background: isSelected ? 'var(--linen)' : 'transparent',
             }}>
               {s.rate ? (
@@ -575,6 +586,7 @@ function StepSuite({ dates, selectedSuite, onSelect }) {
 // ─── Step 3 — Guest details ───────────────────────────────────────────────────
 
 function StepDetails({ details, onChange, missingFields = [] }) {
+  const { isMobile } = useBreakpoint();
   const missing = new Set(missingFields);
   const selectedPreferences = details.stayPreferences || [];
 
@@ -591,7 +603,7 @@ function StepDetails({ details, onChange, missingFields = [] }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
       {/* Primary guest */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 20 : 32 }}>
         <div className="eyebrow" style={{ marginBottom: 20 }}>Primary guest</div>
         {missingFields.length > 0 && (
           <div style={{
@@ -609,7 +621,7 @@ function StepDetails({ details, onChange, missingFields = [] }) {
             Complete {missingFields.join(', ')} to continue.
           </div>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 18 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 18 }}>
           <div className="field">
             <label>First name <span style={{ color: 'var(--terracotta)' }}>*</span></label>
             <input
@@ -653,11 +665,11 @@ function StepDetails({ details, onChange, missingFields = [] }) {
       </div>
 
       {/* Preferences */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 20 : 32 }}>
         <div className="eyebrow" style={{ marginBottom: 20 }}>Preferences</div>
 
         <div className="label" style={{ marginBottom: 10 }}>Stay preferences</div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 10, marginBottom: 24 }}>
           {STAY_PREFERENCES.map(p => {
             const checked = selectedPreferences.includes(p);
             return (
@@ -726,6 +738,7 @@ function ReviewRow({ l, v }) {
 }
 
 function StepReview({ dates, selectedSuite, details, total, onChange }) {
+  const { isMobile, isTablet } = useBreakpoint();
   const nights = dates.checkIn && dates.checkOut
     ? Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000) : 0;
 
@@ -742,9 +755,9 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
 
       {/* Reservation summary */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 20 : 32 }}>
         <div className="eyebrow" style={{ marginBottom: 18 }}>Your reservation</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 20 }}>
           <ReviewRow l="Guest"     v={`${details.firstName} ${details.lastName}`.trim()} />
           <ReviewRow l="Suite"     v={selectedSuite?.name} />
           <ReviewRow l="Arrival"   v={fmtDate(dates.checkIn)} />
@@ -760,18 +773,22 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
       </div>
 
       {/* Payment */}
-      <div className="card" style={{ padding: 32 }}>
+      <div className="card" style={{ padding: isMobile ? 20 : 32 }}>
         <div className="eyebrow" style={{ marginBottom: 18 }}>Payment · 30% deposit</div>
-        <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
           {['Visa', 'Mastercard', 'Amex', 'Apple Pay'].map(p => (
             <div key={p} style={{
-              padding: '10px 16px', border: '1px solid var(--hairline)',
-              fontSize: 11, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-3)',
+              padding: isMobile ? '8px 12px' : '10px 16px', border: '1px solid var(--hairline)',
+              fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-3)',
             }}>{p}</div>
           ))}
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 18, marginBottom: 18 }}>
-          <div className="field" style={{ gridColumn: 'span 3' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '1fr 1fr 1fr',
+          gap: 18, marginBottom: 18,
+        }}>
+          <div className="field" style={{ gridColumn: isMobile ? undefined : isTablet ? 'span 2' : 'span 3' }}>
             <label>Card number</label>
             <input
               value={details.card}
@@ -848,6 +865,7 @@ export default function GuestBookPage() {
   const toast       = useToast();
   const queryClient = useQueryClient();
   const { isAuthenticated, user } = useAuth();
+  const { isMobile, isTablet } = useBreakpoint();
 
   const [step, setStep] = useState(0);
 
@@ -971,19 +989,19 @@ export default function GuestBookPage() {
 
   return (
     <PublicShell>
-      <section style={{ padding: '48px 64px 80px', maxWidth: 1440, margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '32px 20px 60px' : isTablet ? '40px 40px 80px' : '48px 64px 80px', maxWidth: 1440, margin: '0 auto' }}>
 
         <StepIndicator step={step} />
 
         <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--brass-deep)' }}>{t.eyebrow}</div>
-        <h1 className="display" style={{ fontSize: 'clamp(48px, 6.4vw, 80px)', margin: '0 0 12px', lineHeight: 1.02 }}>
+        <h1 className="display" style={{ fontSize: 'clamp(36px, 6.4vw, 80px)', margin: '0 0 12px', lineHeight: 1.02 }}>
           {t.h}
         </h1>
         <p style={{ fontSize: 15, color: 'var(--ink-3)', marginBottom: 40, maxWidth: 600, fontFamily: 'var(--serif)' }}>
           {t.sub}
         </p>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.6fr 1fr', gap: isMobile ? 24 : 40 }}>
 
           {/* ── Left: step content ── */}
           <div>
@@ -991,7 +1009,7 @@ export default function GuestBookPage() {
               <StepDates dates={dates} onDateChange={updateDate} />
             )}
             {step === 1 && (
-              <StepSuite dates={dates} selectedSuite={selectedSuite} onSelect={setSelectedSuite} />
+              <StepSuite dates={dates} selectedSuite={selectedSuite} onSelect={setSelectedSuite} isMobile={isMobile} />
             )}
             {step === 2 && (
               <StepDetails details={details} onChange={updateDetail} missingFields={missingGuestFields} />

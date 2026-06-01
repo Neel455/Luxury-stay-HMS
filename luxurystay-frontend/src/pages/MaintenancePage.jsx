@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -210,6 +211,7 @@ function RequestDetail({ request: r, canManage, canUpdate, onClose, onUpdated })
 
 function NewRequestModal({ onClose, onSaved, rooms }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [form, setForm] = useState({
     room: '', category: 'other', priority: 'medium',
     title: '', description: '',
@@ -251,7 +253,7 @@ function NewRequestModal({ onClose, onSaved, rooms }) {
         </div>
 
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div className="field" style={{ margin: 0 }}>
               <label>Room (optional)</label>
               <select value={form.room} onChange={e => set('room', e.target.value)}>
@@ -303,6 +305,7 @@ function NewRequestModal({ onClose, onSaved, rooms }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MaintenancePage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const { user } = useAuth();
   const role     = user?.role;
   const canManage = ADMIN_MGR.includes(role);
@@ -354,7 +357,7 @@ export default function MaintenancePage() {
       </div>
 
       {/* ── KPI tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
         <Mini label="Open"           value={counts.open} />
         <Mini label="Assigned"       value={counts.assigned} />
         <Mini label="In progress"    value={counts.inProgress} />
@@ -380,7 +383,7 @@ export default function MaintenancePage() {
       </div>
 
       {/* ── Two-col: table + detail ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1.4fr 1fr' : '1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? (isTablet ? '1fr' : '1.4fr 1fr') : '1fr', gap: isMobile ? 20 : 32 }}>
         <div>
           {loading ? (
             <div style={{ padding: 60 }}><Spinner page /></div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -146,6 +147,7 @@ function TaskCard({ task, canManage, canComplete, onUpdate }) {
 
 function AssignTaskModal({ onClose, onSaved, rooms, staff }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [form, setForm] = useState({
     room:        '',
     taskType:    'departure_clean',
@@ -195,7 +197,7 @@ function AssignTaskModal({ onClose, onSaved, rooms, staff }) {
         </div>
 
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div className="field" style={{ margin: 0 }}>
               <label>Room *</label>
               <select value={form.room} onChange={e => set('room', e.target.value)}>
@@ -260,6 +262,7 @@ function AssignTaskModal({ onClose, onSaved, rooms, staff }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function HousekeepingPage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const { user }  = useAuth();
   const role      = user?.role;
   const canManage  = ADMIN_MGR.includes(role);
@@ -307,7 +310,7 @@ export default function HousekeepingPage() {
       {loading ? (
         <div style={{ padding: 80 }}><Spinner page /></div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)', gap: isMobile ? 20 : 32 }}>
           {COLS.map(col => {
             const colTasks = tasks.filter(t => t.status === col.id);
             return (

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -247,6 +248,7 @@ function ServiceRequestDetail({ request: r, canUpdate, currentUserId, onClose, o
 // ─── Guest Service Requests section ──────────────────────────────────────────
 
 function GuestRequestsSection({ canUpdate, currentUser }) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter,   setTypeFilter]   = useState('all');
   const [selected,     setSelected]     = useState(null);
@@ -274,7 +276,7 @@ function GuestRequestsSection({ canUpdate, currentUser }) {
 
   return (
     <div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
         <Mini label="Pending"     value={counts.pending} />
         <Mini label="In progress" value={counts.inProgress} />
         <Mini label="Fulfilled"   value={counts.fulfilled} />
@@ -303,7 +305,7 @@ function GuestRequestsSection({ canUpdate, currentUser }) {
         )}
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1.4fr 1fr' : '1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? (isTablet ? '1fr' : '1.4fr 1fr') : '1fr', gap: isMobile ? 20 : 32 }}>
         <div>
           {loading ? (
             <div style={{ padding: 60 }}><Spinner page /></div>
@@ -532,6 +534,7 @@ function MaintenanceDetail({ request: r, canManage, canUpdate, onClose, onUpdate
 
 function NewMaintenanceModal({ onClose, onSaved, rooms }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [form, setForm] = useState({ room: '', category: 'other', priority: 'medium', title: '', description: '' });
   const [saving, setSaving] = useState(false);
 
@@ -570,7 +573,7 @@ function NewMaintenanceModal({ onClose, onSaved, rooms }) {
           </button>
         </div>
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div className="field" style={{ margin: 0 }}>
               <label>Room (optional)</label>
               <select value={form.room} onChange={e => set('room', e.target.value)}>
@@ -624,6 +627,7 @@ function NewMaintenanceModal({ onClose, onSaved, rooms }) {
 // ─── Maintenance section ──────────────────────────────────────────────────────
 
 function MaintenanceSection({ canManage, canUpdate }) {
+  const { isMobile, isTablet } = useBreakpoint();
   const [statusFilter,   setStatusFilter]   = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [selected,       setSelected]       = useState(null);
@@ -660,7 +664,7 @@ function MaintenanceSection({ canManage, canUpdate }) {
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
         <Mini label="Open"           value={counts.open} />
         <Mini label="Assigned"       value={counts.assigned} />
         <Mini label="In progress"    value={counts.inProgress} />
@@ -684,7 +688,7 @@ function MaintenanceSection({ canManage, canUpdate }) {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1.4fr 1fr' : '1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? (isTablet ? '1fr' : '1.4fr 1fr') : '1fr', gap: isMobile ? 20 : 32 }}>
         <div>
           {loading ? (
             <div style={{ padding: 60 }}><Spinner page /></div>
@@ -768,6 +772,7 @@ function MaintenanceSection({ canManage, canUpdate }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function ServiceRequestsPage() {
+  const { isMobile } = useBreakpoint();
   const { user } = useAuth();
   const role = user?.role;
   const canManage = ADMIN_MGR.includes(role);
@@ -786,7 +791,7 @@ export default function ServiceRequestsPage() {
       </div>
 
       <div style={{ marginBottom: 32 }}>
-        <div className="switch">
+        <div className="switch" style={{ flexWrap: 'wrap' }}>
           <button className={activeTab === 'guest' ? 'active' : ''} onClick={() => setActiveTab('guest')}>
             Guest Requests
           </button>

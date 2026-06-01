@@ -16,7 +16,7 @@ const CRUMBS = {
   '/settings':     ['Administration', 'Settings'],
 };
 
-export default function Topbar({ unreadCount = 0, onNotifClick }) {
+export default function Topbar({ unreadCount = 0, onNotifClick, onMenuToggle }) {
   const { pathname } = useLocation();
   const base = '/' + pathname.split('/')[1];
   const crumbs = CRUMBS[base] || ['—'];
@@ -24,6 +24,9 @@ export default function Topbar({ unreadCount = 0, onNotifClick }) {
   return (
     <header className="topbar">
       <div className="topbar-left">
+        <button className="icon-btn topbar-menu-btn" onClick={onMenuToggle} title="Menu">
+          <Icon name="menu" size={18} />
+        </button>
         <div className="crumbs">
           {crumbs.map((c, i) => (
             <span key={i}>

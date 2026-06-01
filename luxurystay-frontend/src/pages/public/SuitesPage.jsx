@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PublicShell from '../../layouts/PublicShell';
 import Photo from '../../components/Photo';
 import Icon from '../../components/Icon';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 const SC = { fontFamily: 'var(--sc)', fontSize: 12, letterSpacing: '0.26em', textTransform: 'uppercase', fontWeight: 600 };
 
@@ -53,19 +54,27 @@ const FILTERS = [
 
 export default function SuitesPage() {
   const navigate = useNavigate();
+  const { isMobile, isTablet } = useBreakpoint();
   const [filter, setFilter] = useState('all');
 
   const shown = filter === 'all' ? SUITES : SUITES.filter(s => s.cat === filter);
+
+  const hPad = isMobile ? '24px' : isTablet ? '40px' : '64px';
 
   return (
     <PublicShell>
 
       {/* ── Intro ────────────────────────────────────────────────────────── */}
-      <section style={{ padding: '60px 64px 32px', maxWidth: 1440, margin: '0 auto' }}>
+      <section style={{ padding: `${isMobile ? '40px' : '60px'} ${hPad} 32px`, maxWidth: 1440, margin: '0 auto' }}>
         <div style={{ ...SC, color: 'var(--mute)', marginBottom: 18 }}>The accommodations · Folio II</div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 64, alignItems: 'end' }}>
-          <h1 className="display" style={{ fontSize: 'clamp(52px, 7vw, 96px)', margin: 0, lineHeight: 0.92 }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr',
+          gap: isTablet ? 32 : 64,
+          alignItems: 'end',
+        }}>
+          <h1 className="display" style={{ fontSize: 'clamp(44px, 7vw, 96px)', margin: 0, lineHeight: 0.92 }}>
             Forty-two rooms,<br /><em>each composed</em><br />by hand.
           </h1>
 
@@ -100,7 +109,7 @@ export default function SuitesPage() {
       </section>
 
       {/* ── Suite list ───────────────────────────────────────────────────── */}
-      <section style={{ padding: '60px 64px 100px', maxWidth: 1440, margin: '0 auto' }}>
+      <section style={{ padding: `60px ${hPad} 100px`, maxWidth: 1440, margin: '0 auto' }}>
         {shown.map((s, i) => {
           const imageLeft = i % 2 === 0;
           return (
@@ -108,18 +117,25 @@ export default function SuitesPage() {
               key={s.name}
               style={{
                 display: 'grid',
-                gridTemplateColumns: imageLeft ? '1.1fr 1fr' : '1fr 1.1fr',
-                gap: 72, alignItems: 'center',
-                padding: '60px 0',
+                gridTemplateColumns: isTablet ? '1fr' : (imageLeft ? '1.1fr 1fr' : '1fr 1.1fr'),
+                gap: isTablet ? 32 : 72,
+                alignItems: 'center',
+                padding: isMobile ? '40px 0' : '60px 0',
                 borderTop: '1px solid var(--hairline)',
               }}
             >
               {/* Photo side */}
-              <div style={{ order: imageLeft ? 0 : 1, position: 'relative' }}>
-                <Photo tone={s.tone} ratio="4/5" num={`0${i + 1}`} mood={s.mood} />
-                {/* floating sqm badge */}
+              <div style={{
+                order: isTablet ? 0 : (imageLeft ? 0 : 1),
+                position: 'relative',
+              }}>
+                <Photo tone={s.tone} ratio={isTablet ? '16/9' : '4/5'} num={`0${i + 1}`} mood={s.mood} />
+                {/* floating sqm badge — repositioned on mobile so it doesn't overflow */}
                 <div style={{
-                  position: 'absolute', top: 24, right: -24,
+                  position: 'absolute',
+                  top: isMobile ? 'auto' : 24,
+                  bottom: isMobile ? 12 : 'auto',
+                  right: isMobile ? 12 : -24,
                   padding: '8px 14px',
                   background: 'var(--ivory)', border: '1px solid var(--hairline)',
                   fontSize: 12, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--mute)', fontWeight: 500,
@@ -129,12 +145,12 @@ export default function SuitesPage() {
               </div>
 
               {/* Copy side */}
-              <div style={{ order: imageLeft ? 1 : 0 }}>
+              <div style={{ order: isTablet ? 1 : (imageLeft ? 1 : 0) }}>
                 <div style={{ ...SC, color: 'var(--brass-deep)', marginBottom: 14 }}>
                   Category 0{i + 1} · {s.view}
                 </div>
 
-                <h2 className="display" style={{ fontSize: 'clamp(36px, 4vw, 64px)', margin: '0 0 20px', lineHeight: 1 }}>
+                <h2 className="display" style={{ fontSize: 'clamp(32px, 4vw, 64px)', margin: '0 0 20px', lineHeight: 1 }}>
                   {s.name}
                 </h2>
 
@@ -143,7 +159,7 @@ export default function SuitesPage() {
                 </p>
 
                 {/* amenities — inline dot list */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 32, maxWidth: 440 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 8, marginBottom: 32, maxWidth: 440 }}>
                   {s.amenities.map((a, j) => (
                     <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: 'var(--ink-3)', fontWeight: 500 }}>
                       <span style={{ color: 'var(--brass)', fontFamily: 'var(--serif)', fontStyle: 'italic', fontSize: 16 }}>·</span>
@@ -156,6 +172,7 @@ export default function SuitesPage() {
                 <div style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'baseline',
                   paddingTop: 24, borderTop: '1px solid var(--hairline)', maxWidth: 480,
+                  flexWrap: 'wrap', gap: 16,
                 }}>
                   <div>
                     <div className="label" style={{ marginBottom: 4 }}>From</div>

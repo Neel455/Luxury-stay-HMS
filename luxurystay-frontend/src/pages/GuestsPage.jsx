@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -70,6 +71,7 @@ function DetailRow({ label, value }) {
 
 function GuestDetail({ guest, canEdit, onClose, onSaved }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [editing, setEditing] = useState(false);
   const [saving,  setSaving]  = useState(false);
   const [form, setForm]       = useState({
@@ -138,7 +140,7 @@ function GuestDetail({ guest, canEdit, onClose, onSaved }) {
 
       {editing ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 16 }}>
             <div className="field"><label>First name</label><input value={form.firstName} onChange={e => set('firstName', e.target.value)} /></div>
             <div className="field"><label>Last name</label><input value={form.lastName} onChange={e => set('lastName', e.target.value)} /></div>
             <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
@@ -176,7 +178,7 @@ function GuestDetail({ guest, canEdit, onClose, onSaved }) {
       ) : (
         <>
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 16, marginBottom: 20 }}>
             <Stat label="Total visits"    value={guest.totalStays ?? '—'} />
             <Stat label="Lifetime spend"  value={fmtCurrency(guest.lifetimeSpend)} />
             <Stat label="Last visit"      value={fmtDate(guest.lastStay)} />
@@ -214,6 +216,7 @@ function GuestDetail({ guest, canEdit, onClose, onSaved }) {
 
 function NewGuestModal({ onClose, onSaved }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phone: '',
     nationality: '', tier: 'none', notes: '',
@@ -254,7 +257,7 @@ function NewGuestModal({ onClose, onSaved }) {
         </div>
 
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
             <div className="field" style={{ margin: 0 }}><label>First name *</label><input value={form.firstName} onChange={e => set('firstName', e.target.value)} autoFocus /></div>
             <div className="field" style={{ margin: 0 }}><label>Last name *</label><input value={form.lastName} onChange={e => set('lastName', e.target.value)} /></div>
             <div className="field" style={{ margin: 0 }}><label>Email *</label><input type="email" value={form.email} onChange={e => set('email', e.target.value)} /></div>
@@ -298,6 +301,7 @@ function NewGuestModal({ onClose, onSaved }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function GuestsPage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const { user }  = useAuth();
   const canEdit   = ['admin', 'manager', 'receptionist'].includes(user?.role);
   const [searchParams] = useSearchParams();
@@ -419,7 +423,7 @@ export default function GuestsPage() {
       </div>
 
       {/* ── Two-col layout: table + detail ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1.4fr 1fr' : '1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? (isTablet ? '1fr' : '1.4fr 1fr') : '1fr', gap: isMobile ? 20 : 32 }}>
         {/* Left: table */}
         <div>
           {loading ? (

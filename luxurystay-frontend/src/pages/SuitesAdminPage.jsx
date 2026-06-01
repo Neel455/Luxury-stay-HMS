@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Dropdown from '../components/Dropdown';
@@ -51,6 +52,7 @@ function SuiteVisual({ suite, size = 80 }) {
 function SuiteModal({ suite, onClose, onSaved }) {
   const { user } = useAuth();
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const isEdit = !!suite;
 
   const [form, setForm] = useState(() => {
@@ -154,7 +156,7 @@ function SuiteModal({ suite, onClose, onSaved }) {
           {/* Identity */}
           <div>
             <div className="eyebrow" style={{ marginBottom: 12 }}>Identity</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 14 }}>
               <div className="field" style={{ margin: 0 }}>
                 <label>Name <span style={{ color: 'var(--terracotta)' }}>*</span></label>
                 <input value={form.name} onChange={e => setField('name', e.target.value)} placeholder="e.g. Junior Suite" />
@@ -184,7 +186,7 @@ function SuiteModal({ suite, onClose, onSaved }) {
               <label>Description</label>
               <textarea rows={3} value={form.description} onChange={e => setField('description', e.target.value)} placeholder="Marketing description shown on the public suites page…" style={{ resize: 'vertical' }} />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : '1fr 1fr 1fr 1fr', gap: 12 }}>
               <div className="field" style={{ margin: 0 }}>
                 <label>Sqm</label>
                 <input type="number" value={form.sqm} onChange={e => setField('sqm', e.target.value)} placeholder="48" />
@@ -294,6 +296,7 @@ function SuiteModal({ suite, onClose, onSaved }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SuitesAdminPage() {
+  const { isMobile } = useBreakpoint();
   const { user } = useAuth();
   const role = user?.role;
   const canManage = ADMIN_MGR.includes(role);
@@ -365,7 +368,7 @@ export default function SuitesAdminPage() {
                 background: suite.isActive ? 'var(--paper)' : 'var(--ivory)',
                 opacity: suite.isActive ? 1 : 0.6,
                 display: 'grid',
-                gridTemplateColumns: '80px 1fr auto',
+                gridTemplateColumns: isMobile ? '64px 1fr' : '80px 1fr auto',
                 gap: 0,
                 overflow: 'hidden',
               }}

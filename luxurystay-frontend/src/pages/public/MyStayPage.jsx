@@ -8,6 +8,7 @@ import api from '../../lib/api';
 import Icon from '../../components/Icon';
 import Photo from '../../components/Photo';
 import PublicShell from '../../layouts/PublicShell';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
 // ─── History panel ────────────────────────────────────────────────────────────
 
@@ -578,6 +579,7 @@ export default function GuestPortalPage() {
   const navigate    = useNavigate();
   const toast       = useToast();
   const queryClient = useQueryClient();
+  const { isMobile, isTablet } = useBreakpoint();
 
   const [serviceModal,      setServiceModal]      = useState(null);
   const [maintModal,        setMaintModal]        = useState(false);
@@ -716,7 +718,7 @@ export default function GuestPortalPage() {
         <section style={{
           background: 'linear-gradient(160deg, #2A2620 0%, #1A1814 100%)',
           color: 'var(--ivory)',
-          padding: '64px 64px 80px',
+          padding: isMobile ? '40px 20px 60px' : isTablet ? '48px 40px 64px' : '64px 64px 80px',
           position: 'relative', overflow: 'hidden',
         }}>
           {/* Radial glow */}
@@ -741,7 +743,7 @@ export default function GuestPortalPage() {
 
             {/* Live tiles — 5 col */}
             <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)',
+              display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : isTablet ? 'repeat(3, 1fr)' : 'repeat(5, 1fr)',
               gap: 1, background: 'rgba(247,243,236,0.08)',
               border: '1px solid rgba(247,243,236,0.12)',
             }}>
@@ -764,7 +766,7 @@ export default function GuestPortalPage() {
       )}
 
       {/* ── Main content ─────────────────────────────────────────────────── */}
-      <section style={{ padding: '80px 64px 80px', maxWidth: 1440, margin: '0 auto' }}>
+      <section style={{ padding: isMobile ? '40px 20px 60px' : isTablet ? '48px 40px 60px' : '80px 64px 80px', maxWidth: 1440, margin: '0 auto' }}>
 
         {/* Reservation switcher — only when multiple stays */}
         {displayStays.length > 1 && (
@@ -772,7 +774,7 @@ export default function GuestPortalPage() {
             <div className="eyebrow" style={{ marginBottom: 12 }}>
               {displayStays.length} reservations · select to view
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${displayStays.length}, 1fr)`, gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : `repeat(${displayStays.length}, 1fr)`, gap: 10 }}>
               {displayStays.map((stay, i) => {
                 const isSelected  = i === safeIndex;
                 const stayLabel   = TYPE_LABEL[stay.room?.type] || stay.room?.type || 'Suite';
@@ -810,7 +812,7 @@ export default function GuestPortalPage() {
         )}
 
         {displayStay ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 48 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.5fr 1fr', gap: isMobile ? 24 : 48 }}>
 
             {/* ── Left column ── */}
             <div>
@@ -825,8 +827,8 @@ export default function GuestPortalPage() {
                   <div style={{ borderTop: '1px solid var(--hairline)', marginBottom: 48 }}>
                     {TODAY_SCHEDULE.map((c, i) => (
                       <div key={i} style={{
-                        display: 'grid', gridTemplateColumns: '80px 1fr auto',
-                        gap: 20, padding: '20px 0',
+                        display: 'grid', gridTemplateColumns: isMobile ? '60px 1fr' : '80px 1fr auto',
+                        gap: isMobile ? 12 : 20, padding: '20px 0',
                         borderBottom: '1px solid var(--hairline)', alignItems: 'center',
                       }}>
                         <div className="display numeral" style={{ fontSize: 24, fontStyle: 'italic', color: 'var(--brass-deep)' }}>{c.time}</div>

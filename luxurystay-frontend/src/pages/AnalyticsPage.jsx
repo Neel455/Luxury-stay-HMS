@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Area, AreaChart,
@@ -174,6 +175,7 @@ function TableRow({ label, values, border = true }) {
 
 export default function AnalyticsPage() {
   const [period, setPeriod] = useState('month');
+  const { isMobile, isTablet } = useBreakpoint();
 
   // Parallel API calls
   const { data: dashData, loading: dashLoading }   = useApi('/api/reports/dashboard');
@@ -219,7 +221,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* ── KPI tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 32 }}>
         {dashLoading ? (
           Array.from({ length: 4 }).map((_, i) => <div key={i} style={{ background: 'var(--paper)', padding: '20px 24px', height: 88 }} />)
         ) : (
@@ -233,7 +235,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* ── Revenue chart + category breakdown ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 32, marginBottom: 36 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.6fr 1fr', gap: isMobile ? 20 : 32, marginBottom: 36 }}>
         <div>
           <SectionHead title="Revenue trend" caption={`by ${period}`} />
           <div className="card" style={{ minHeight: 220 }}>
@@ -288,7 +290,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* ── Bottom 3 cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : 'repeat(3, 1fr)', gap: 20 }}>
 
         {/* Room performance */}
         <div className="card" style={{ padding: 24 }}>

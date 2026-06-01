@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { useAuth } from '../context/AuthContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
 import MetricTile from '../components/MetricTile';
@@ -187,6 +188,7 @@ function ArrivalsTable({ arrivals, loading, navigate }) {
 export default function DashboardPage() {
   const { user }    = useAuth();
   const navigate    = useNavigate();
+  const { isMobile, isTablet } = useBreakpoint();
   const firstName   = user?.name?.split(' ')[0] || 'there';
 
   const { data: dashData,    loading: dashLoading }    = useApi('/api/reports/dashboard');
@@ -254,7 +256,7 @@ export default function DashboardPage() {
               : 'Loading today\'s schedule…'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 10 }}>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <button className="btn btn-ghost" onClick={() => navigate('/reservations')}>
             <Icon name="calendar" size={12} />Reservations
           </button>
@@ -265,15 +267,13 @@ export default function DashboardPage() {
       </div>
 
       {/* ── KPI tiles ── */}
-      <div
-  style={{
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: 1,
-    background: 'var(--hairline)',
-    border: '1px solid var(--hairline)',
-  }}
->
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)',
+        gap: 1,
+        background: 'var(--hairline)',
+        border: '1px solid var(--hairline)',
+      }}>
   {tiles.map((tile, i) => (
     <MetricTile
       key={i}
@@ -286,7 +286,7 @@ export default function DashboardPage() {
 </div>
 
       {/* ── Arrivals + Room status ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 32, marginTop: 40 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr', gap: isMobile ? 24 : 32, marginTop: 40 }}>
         <div>
           <SectionHead
             title="Today's arrivals"

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -107,6 +108,7 @@ function FeedbackCard({ item, onSelect, isActive }) {
 function FeedbackDetail({ item, onClose, onUpdated }) {
   const toast    = useToast();
   const navigate = useNavigate();
+  const { isMobile } = useBreakpoint();
 
   const [response,   setResponse]   = useState(item.staffResponse || '');
   const [actionNote, setActionNote] = useState(item.actionNote    || '');
@@ -163,7 +165,7 @@ function FeedbackDetail({ item, onClose, onUpdated }) {
 
       {/* Sidebar panel */}
       <div style={{
-        position: 'relative', width: 440, background: 'var(--paper)',
+        position: 'relative', width: isMobile ? '100vw' : 440, maxWidth: '100%', background: 'var(--paper)',
         borderLeft: '1px solid var(--hairline)', height: '100%',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
@@ -310,6 +312,7 @@ function FeedbackDetail({ item, onClose, onUpdated }) {
 
 function NewFeedbackModal({ onClose, onSaved }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [resSearch,  setResSearch]  = useState('');
   const [resId,      setResId]      = useState('');
   const [guestId,    setGuestId]    = useState('');
@@ -386,7 +389,7 @@ function NewFeedbackModal({ onClose, onSaved }) {
         {/* Ratings */}
         <div>
           <div className="eyebrow" style={{ marginBottom: 12 }}>Ratings</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 12 }}>
             {[['overall','Overall *'],['cleanliness','Cleanliness'],['service','Service'],['comfort','Comfort'],['value','Value']].map(([k, label]) => (
               <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontSize: 12, color: 'var(--mute)', width: 80 }}>{label}</span>
@@ -424,6 +427,7 @@ function NewFeedbackModal({ onClose, onSaved }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function FeedbackPage() {
+  const { isMobile } = useBreakpoint();
   const [ratingFilter, setRatingFilter] = useState('all');
   const [actionFilter, setActionFilter] = useState(false);
   const [selected,     setSelected]     = useState(null);
@@ -475,7 +479,7 @@ export default function FeedbackPage() {
       </div>
 
       {/* ── KPI tiles ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 36 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 1, background: 'var(--hairline)', border: '1px solid var(--hairline)', marginBottom: 36 }}>
         {[
           { label: 'Avg. rating',   value: avgRating },
           { label: 'Total reviews', value: total },
@@ -514,7 +518,7 @@ export default function FeedbackPage() {
       {loading ? (
         <div style={{ padding: 60 }}><Spinner page /></div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: 20 }}>
           {!feedbacks.length ? (
             <div style={{ gridColumn: '1/-1', padding: '40px 0', textAlign: 'center', color: 'var(--mute)', fontSize: 13 }}>
               No feedback found.

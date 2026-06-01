@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
 import Spinner from '../components/Spinner';
@@ -87,6 +88,7 @@ function FolioRow({ desc, amount, muted }) {
 
 function InvoiceDetail({ invoice: inv, onClose, onUpdated }) {
   const toast = useToast();
+  const { isMobile } = useBreakpoint();
   const [showAddLine, setShowAddLine] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [lineForm, setLineForm]       = useState({ description: '', category: 'other', quantity: 1, unitPrice: '' });
@@ -185,7 +187,7 @@ function InvoiceDetail({ invoice: inv, onClose, onUpdated }) {
       {/* Add line item */}
       {showAddLine ? (
         <div style={{ background: 'var(--linen)', padding: 16, borderRadius: 2, marginBottom: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div className="field" style={{ gridColumn: '1/-1' }}>
               <label>Description</label>
               <input value={lineForm.description} onChange={e => setLine('description', e.target.value)} placeholder="e.g. In-room dining &middot; dinner" autoFocus />
@@ -236,7 +238,7 @@ function InvoiceDetail({ invoice: inv, onClose, onUpdated }) {
       {/* Payment actions */}
       {showPayment ? (
         <div style={{ background: 'var(--linen)', padding: 16, borderRadius: 2, marginTop: 16 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: 10, marginBottom: 10 }}>
             <div className="field">
               <label>Payment status</label>
               <select value={payForm.paymentStatus} onChange={e => setPay('paymentStatus', e.target.value)}>
@@ -396,6 +398,7 @@ function NewInvoiceModal({ onClose, onSaved }) {
 // --- Page ---
 
 export default function BillingPage() {
+  const { isMobile, isTablet } = useBreakpoint();
   const [statusFilter, setStatusFilter] = useState('all');
   const [selected,     setSelected]     = useState(null);
   const [showNew,      setShowNew]      = useState(false);
@@ -447,8 +450,8 @@ export default function BillingPage() {
       </div>
 
       {/* Status filter */}
-      <div style={{ marginBottom: 20 }}>
-        <div className="switch">
+      <div style={{ marginBottom: 20, flexWrap: 'wrap' }}>
+        <div className="switch" style={{ flexWrap: 'wrap' }}>
           {['all', ...PAYMENT_STATUSES].map(s => (
             <button key={s} className={statusFilter === s ? 'active' : ''} onClick={() => { setStatusFilter(s); setPage(1); }}>
               {s === 'all' ? 'All' : STATUS_CONFIG[s]?.label || s}
@@ -458,7 +461,7 @@ export default function BillingPage() {
       </div>
 
       {/* Two-col: table + detail */}
-      <div style={{ display: 'grid', gridTemplateColumns: selected ? '1.6fr 1fr' : '1fr', gap: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: selected ? (isTablet ? '1fr' : '1.6fr 1fr') : '1fr', gap: isMobile ? 20 : 32 }}>
         <div>
           <SectionHead title="Invoices" caption={`${total} total`} />
 
