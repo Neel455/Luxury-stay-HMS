@@ -147,6 +147,16 @@ const reservationSchema = new mongoose.Schema(
       lostAndFoundCleared:  { type: Boolean, default: false },
       transferDispatched:   { type: Boolean, default: false },
     },
+
+    // Financial adjustment applied at checkout (early departure credit or overdue charge)
+    checkoutAdjustment: {
+      type:     { type: String, enum: ['credit', 'charge', 'none'], default: 'none' },
+      nights:   { type: Number, default: 0 },   // nights early OR days overdue
+      amount:   { type: Number, default: 0 },
+      waived:   { type: Boolean, default: false },
+      waivedBy: { type: String, default: null },
+      reason:   { type: String, default: null },
+    },
   },
   {
     timestamps: true,

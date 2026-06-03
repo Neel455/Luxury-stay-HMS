@@ -59,18 +59,20 @@ function fmtTime(iso) {
 
 function TaskCard({ task, canManage, canComplete, onUpdate }) {
   const toast    = useToast();
+  const { user } = useAuth();
   const priority = PRIORITY_CONFIG[task.priority] || PRIORITY_CONFIG.medium;
   const isDone   = task.status === 'completed';
   const assigneeName = task.assignedTo
     ? [task.assignedTo.name].filter(Boolean).join(' ')
     : task.assignedToName || '—';
 
+  const taskId = task.id || task._id;
+
   async function handleComplete() {
     try {
-      // Auto-mark room available when completing a departure or prep clean
       const shouldMarkAvailable = ['departure_clean', 'arrival_prep', 'deep_clean'].includes(task.taskType)
         || task.room?.status === 'cleaning';
-      await api.patch(`/api/housekeeping/${task._id}/complete`, {
+      await api.patch(`/api/housekeeping/${taskId}/complete`, {
         completionNote:   '',
         updateRoomStatus: shouldMarkAvailable,
       });
@@ -82,7 +84,10 @@ function TaskCard({ task, canManage, canComplete, onUpdate }) {
 
   async function handleProgress() {
     try {
-      await api.patch(`/api/housekeeping/${task._id}`, { status: 'in-progress' });
+      await api.patch(`/api/housekeeping/${taskId}`, {
+        status:     'in-progress',
+        assignedTo: user?.id || user?._id,
+      });
       onUpdate();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Could not update status.');
@@ -115,9 +120,11 @@ function TaskCard({ task, canManage, canComplete, onUpdate }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--hairline-2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="avatar" style={{ width: 22, height: 22, fontSize: 9 }}>
-            {getInitials(assigneeName)}
+            {assigneeName && assigneeName !== '—' ? getInitials(assigneeName) : '?'}
           </div>
-          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>{assigneeName}</span>
+          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>
+            {assigneeName && assigneeName !== '—' ? assigneeName : 'Unassigned'}
+          </span>
         </div>
         <span className="mono" style={{ color: 'var(--mute)', fontSize: 11 }}>
           {task.scheduledFor ? fmtTime(task.scheduledFor) : '—'}
@@ -271,9 +278,9 @@ export default function HousekeepingPage() {
   const [showAssign, setShowAssign] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const { data: taskData,  loading: taskLoading  } = useApi('/api/housekeeping?limit=200', { deps: [refreshKey] });
-  const { data: roomsData, loading: roomsLoading } = useApi('/api/rooms?limit=200&isActive=true');
-  const { data: staffData                        } = useApi('/api/users?role=housekeeping&limit=50');
+  const { data: taskData,  loading: taskLoading,  fetching: taskFetching  } = useApi('/api/housekeeping?limit=200', { deps: [refreshKey] });
+  const { data: roomsData, loading: roomsLoading                          } = useApi('/api/rooms?limit=200&isActive=true');
+  const { data: staffData                                                  } = useApi('/api/users?role=housekeeping&limit=50');
 
   const tasks = taskData?.tasks || [];
   const rooms = roomsData?.rooms || [];
@@ -287,7 +294,7 @@ export default function HousekeepingPage() {
     return acc;
   }, {});
 
-  const loading = taskLoading || roomsLoading;
+  const loading = taskLoading || taskFetching || roomsLoading;
 
   return (
     <div>

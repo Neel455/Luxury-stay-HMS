@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../hooks/useAuth';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import api from '../lib/api';
 import Icon from '../components/Icon';
@@ -49,9 +50,100 @@ function notesForMode(reservation, isArrival) {
     : reservation.notes || reservation.specialRequests || '';
 }
 
+// Maps display checklist labels → backend field names
+const DEPARTURE_KEY_MAP = {
+  'Mini-bar verified':    'miniBarVerified',
+  'Safe emptied':         'safeEmptied',
+  'Keys returned':        'keysReturned',
+  'Damage assessment':    'damageAssessment',
+  'Lost & found cleared': 'lostAndFoundCleared',
+  'Transfer dispatched':  'transferDispatched',
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
+function CheckoutConfirmModal({ reservation, waiveable, onConfirm, onCancel }) {
+  const [waive, setWaive] = useState(false);
 
+  const today     = new Date(); today.setHours(0, 0, 0, 0);
+  const scheduled = new Date(reservation.checkOutDate); scheduled.setHours(0, 0, 0, 0);
+  const diffDays  = Math.round((scheduled - today) / 86400000);
+
+  const scheduledNights = Math.ceil(
+    (new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)) / 86400000
+  );
+  const nightlyRate = scheduledNights > 0
+    ? Math.round(reservation.totalAmount / scheduledNights)
+    : 0;
+
+  const adjType   = diffDays > 0 ? 'credit' : diffDays < 0 ? 'charge' : 'none';
+  const adjNights = Math.abs(diffDays);
+  const adjAmount = nightlyRate * adjNights;
+
+  const isCredit  = adjType === 'credit';
+  const isCharge  = adjType === 'charge';
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 9999,
+      background: 'rgba(0,0,0,0.45)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 24,
+    }}>
+      <div className="card" style={{ width: '100%', maxWidth: 480, padding: 32 }}>
+        <div className="eyebrow" style={{ marginBottom: 8 }}>Checkout · Billing adjustment</div>
+
+        {adjType === 'none' ? (
+          <p style={{ fontSize: 14, color: 'var(--ink-3)', marginBottom: 24 }}>
+            Guest is checking out on the scheduled date. No adjustment required.
+          </p>
+        ) : (
+          <>
+            <div style={{
+              padding: '16px 20px', borderRadius: 4, marginBottom: 20,
+              background: isCredit ? 'rgba(72,187,120,0.08)' : 'rgba(229,62,62,0.08)',
+              border: `1px solid ${isCredit ? 'rgba(72,187,120,0.3)' : 'rgba(229,62,62,0.3)'}`,
+            }}>
+              <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 4, color: isCredit ? '#276749' : '#9b2c2c' }}>
+                {isCredit
+                  ? `Early departure — ${adjNights} unused night${adjNights !== 1 ? 's' : ''}`
+                  : `Overdue — ${adjNights} extra day${adjNights !== 1 ? 's' : ''}`}
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--ink-3)' }}>
+                {isCredit
+                  ? `A credit of ${fmtCurrency(adjAmount)} will be applied to the guest's folio.`
+                  : `A late-checkout charge of ${fmtCurrency(adjAmount)} will be added to the folio.`}
+              </div>
+            </div>
+
+            {waiveable && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, cursor: 'pointer', fontSize: 13 }}>
+                <span
+                  onClick={() => setWaive(w => !w)}
+                  style={{
+                    width: 16, height: 16, border: '1px solid var(--ink-3)', borderRadius: 2,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: waive ? 'var(--ink)' : 'transparent', flexShrink: 0,
+                  }}
+                >
+                  {waive && <Icon name="check" size={11} style={{ color: 'var(--paper)' }} />}
+                </span>
+                Waive {isCredit ? 'credit' : 'charge'} — no adjustment applied
+              </label>
+            )}
+          </>
+        )}
+
+        <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+          <button className="btn btn-ghost" onClick={onCancel}>Cancel</button>
+          <button className="btn btn-primary" onClick={() => onConfirm(waive)}>
+            Confirm checkout<Icon name="arrow_right" size={12} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SummaryRow({ label, value }) {
   return (
@@ -102,10 +194,10 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
 
   const summary = isArrival
     ? [
-        { label: 'Expected today',  value: list.filter(r => ['pending','confirmed'].includes(r.status)).length },
-        { label: 'Checked in',      value: list.filter(r => r.status === 'checked-in').length },
+        { label: 'Pending arrival', value: list.filter(r => ['pending','confirmed'].includes(r.status)).length },
         { label: 'VIP arrivals',    value: list.filter(r => r.guest?.isVIP || r.guest?.tier === 'etoile').length },
         { label: 'Avg. stay',       value: list.length ? `${(list.reduce((a, b) => a + (b.nights || 0), 0) / list.length).toFixed(1)} nts` : '—' },
+        { label: 'Rooms needed',    value: list.length },
       ]
     : [
         { label: 'Departing today', value: list.length },
@@ -145,6 +237,7 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
               const canAct    = isArrival
                 ? ['pending','confirmed'].includes(r.status)
                 : r.status === 'checked-in';
+              const isEarly   = !isArrival && r.status === 'checked-in' && r.checkOutDate && r.checkOutDate.slice(0, 10) > TODAY_STR;
 
               return (
                 <tr key={r._id} onClick={() => onSelect(r)} style={{ cursor: 'pointer' }}>
@@ -182,7 +275,7 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
                     >
                       {isArrival
                         ? (canAct ? 'Check in' : 'View')
-                        : (canAct ? 'Check out' : 'View')}
+                        : (canAct ? (isEarly ? 'Early check-out' : 'Check out') : 'View')}
                       <Icon name="arrow_right" size={10} />
                     </button>
                   </td>
@@ -200,6 +293,7 @@ function CheckInList({ list, mode, onSelect, loading, emptyLabel }) {
 
 function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
   const toast = useToast();
+  const { user } = useAuth();
   const { isMobile, isTablet } = useBreakpoint();
   const isArrival = mode === 'checkin';
 
@@ -208,6 +302,7 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
   const [loading, setLoading]     = useState(false);
   const [checkoutSaving, setCheckoutSaving] = useState(false);
   const [checkOutDate, setCheckOutDate] = useState(toDateInputValue(reservation.checkOutDate));
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
 
   const r          = reservation;
   const firstName  = r.guest?.firstName || '';
@@ -235,15 +330,50 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
     ? ['pending', 'confirmed'].includes(r.status)
     : r.status === 'checked-in';
 
-  async function handleAction() {
+  function handleAction() {
+    if (!isArrival) {
+      // For checkout, show the adjustment modal first
+      setShowCheckoutModal(true);
+      return;
+    }
+    performCheckin();
+  }
+
+  async function performCheckin() {
     setLoading(true);
     try {
-      const endpoint = isArrival ? `/api/reservations/${r.id}/checkin` : `/api/reservations/${r.id}/checkout`;
-      await api.patch(endpoint);
-      toast.success(isArrival ? `${firstName} checked in to room ${r.room?.roomNumber}.` : `${fullName} checked out successfully.`);
+      const stayPrefs = Object.entries(checklist)
+        .filter(([, v]) => v)
+        .map(([k]) => k);
+      await api.patch(`/api/reservations/${r.id}/checkin`, {
+        stayPreferences: stayPrefs,
+        notes: notes || undefined,
+      });
+      toast.success(`${firstName} checked in to room ${r.room?.roomNumber}.`);
       onDone();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Action failed. Please try again.');
+      toast.error(err.response?.data?.message || 'Check-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function performCheckout(waiveAdjustment) {
+    setShowCheckoutModal(false);
+    setLoading(true);
+    try {
+      const departureChecklist = Object.fromEntries(
+        Object.entries(DEPARTURE_KEY_MAP).map(([label, key]) => [key, checklist[label] ?? false])
+      );
+      await api.patch(`/api/reservations/${r.id}/checkout`, {
+        departureChecklist,
+        notes:            notes || undefined,
+        waiveAdjustment:  waiveAdjustment || undefined,
+      });
+      toast.success(`${fullName} checked out successfully.`);
+      onDone();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Check-out failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -277,8 +407,19 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
     }
   }
 
+  const canWaive = ['admin', 'manager'].includes(user?.role);
+
   return (
     <div>
+      {showCheckoutModal && (
+        <CheckoutConfirmModal
+          reservation={r}
+          waiveable={canWaive}
+          onConfirm={performCheckout}
+          onCancel={() => setShowCheckoutModal(false)}
+        />
+      )}
+
       <button className="btn btn-ghost btn-sm" onClick={onBack} style={{ marginBottom: 20 }}>
         <Icon name="arrow_left" size={12} />Back to {isArrival ? 'arrivals' : 'departures'}
       </button>
@@ -393,9 +534,12 @@ function CheckInDetail({ reservation, mode, onBack, onDone, onUpdated }) {
             {/* Notes */}
             <div className="field" style={{ marginBottom: 28 }}>
               <label>Staff notes</label>
-              <textarea value={notes} readOnly
+              <textarea
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
                 placeholder="Any notes for handover…"
-                style={{ minHeight: 72, resize: 'vertical', cursor: 'default', color: notes ? 'var(--ink)' : 'var(--mute)' }} />
+                style={{ minHeight: 72, resize: 'vertical' }}
+              />
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -463,13 +607,18 @@ export default function CheckInPage() {
   const { data: departuresData, loading: departuresLoading } = useApi('/api/reservations/today-departures', { deps: [refreshKey] });
   const { data: checkedInData,  loading: checkedInLoading }  = useApi('/api/reservations?status=checked-in&limit=200', { deps: [refreshKey] });
 
-  const arrivals   = arrivalsData?.arrivals    || [];
+  // Arrivals: only pending/confirmed with today's check-in date
+  const arrivals   = (arrivalsData?.arrivals || []).filter(r => r.status !== 'checked-in');
+  // Departures: checked-in guests with today's checkout date (backend already filters this)
   const departures = departuresData?.departures || [];
-  const overdue    = (checkedInData?.reservations || []).filter(
+  // Checked-in tab: all currently checked-in guests
+  const allCheckedIn = checkedInData?.reservations || [];
+
+  const overdue = allCheckedIn.filter(
     r => r.checkOutDate && r.checkOutDate.slice(0, 10) < TODAY_STR
   );
 
-  const list    = tab === 'checkin' ? arrivals : tab === 'checkout' ? departures : overdue;
+  const list    = tab === 'checkin' ? arrivals : tab === 'checkout' ? departures : allCheckedIn;
   const loading = tab === 'checkin' ? arrivalsLoading : tab === 'checkout' ? departuresLoading : checkedInLoading;
 
   function switchTab(t) { setTab(t); setSelected(null); }
@@ -500,7 +649,7 @@ export default function CheckInPage() {
           </button>
           <button className={tab === 'overdue'  ? 'active' : ''} onClick={() => switchTab('overdue')}
             style={{ position: 'relative' }}>
-            Overdue
+            Checked-in · {allCheckedIn.length}
             {overdue.length > 0 && (
               <span style={{ marginLeft: 6, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: 18, height: 18, borderRadius: 9, background: 'var(--terracotta)', color: '#fff', fontSize: 10, fontWeight: 700, padding: '0 4px' }}>
                 {overdue.length}
@@ -524,7 +673,7 @@ export default function CheckInPage() {
           mode={tab === 'overdue' ? 'checkout' : tab}
           onSelect={setSelected}
           loading={loading}
-          emptyLabel={tab === 'overdue' ? 'No overdue checkouts — all guests are within their stay dates.' : undefined}
+          emptyLabel={tab === 'overdue' ? 'No guests currently checked in.' : undefined}
         />
       )}
     </div>

@@ -2,7 +2,6 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 
 const connectDB = require('./config/db');
@@ -28,34 +27,6 @@ app.use(
 );
 app.options('*', cors());
 
-// ─── Rate Limiting ───────────────────────────────────────────────────────────
-const globalLimiter = process.env.NODE_ENV === 'test'
-  ? (req, res, next) => next()
-  : rateLimit({
-      windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-      max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: {
-        success: false,
-        message: 'Too many requests from this IP. Please try again later.',
-      },
-    });
-app.use('/api', globalLimiter);
-
-// Stricter limiter for auth routes (disabled in test environment)
-const authLimiter = process.env.NODE_ENV === 'test'
-  ? (req, res, next) => next()
-  : rateLimit({
-      windowMs: 15 * 60 * 1000,
-      max: 20,
-      standardHeaders: true,
-      legacyHeaders: false,
-      message: {
-        success: false,
-        message: 'Too many authentication attempts. Please try again in 15 minutes.',
-      },
-    });
 
 // ─── Body Parsing ────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10kb' }));
@@ -80,7 +51,7 @@ app.get('/health', (req, res) => {
 
 // ─── API Routes ──────────────────────────────────────────────────────────────
 // Module 2 — Auth & Users
-app.use('/api/auth',  authLimiter, require('./routes/auth'));
+app.use('/api/auth',  require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 
 // Module 3 — Guests
@@ -114,6 +85,9 @@ app.use('/api/notifications', require('./routes/notifications'));
 
 // Guest self-service portal
 app.use('/api/guest', require('./routes/guestSelf'));
+
+// Role page permissions
+app.use('/api/role-permissions', require('./routes/rolePermissions'));
 
 // Public — Contact form (no auth)
 app.use('/api/contact', require('./routes/contact'));

@@ -53,9 +53,17 @@ exports.updateTaskValidator = [
     .trim()
     .isLength({ max: 100 }).withMessage('Title cannot exceed 100 characters.'),
 
+  body('assignedTo')
+    .optional({ nullable: true, checkFalsy: true })
+    .isMongoId().withMessage('assignedTo must be a valid MongoDB ObjectId.'),
+
   body('priority')
     .optional()
     .isIn(PRIORITIES).withMessage(`Priority must be one of: ${PRIORITIES.join(', ')}.`),
+
+  body('status')
+    .optional()
+    .isIn(STATUSES).withMessage(`Status must be one of: ${STATUSES.join(', ')}.`),
 
   body('scheduledFor')
     .optional({ nullable: true, checkFalsy: true })

@@ -81,15 +81,13 @@ function RoomCard({ room, canManage, canChangeStatus, onManage }) {
       <div style={{ height: 1, background: 'var(--hairline-2)', margin: '16px 0' }} />
 
       <div style={{ minHeight: 38 }}>
-        {room.currentGuest ? (
+        {room.currentGuest && (room.status === 'occupied' || room.status === 'reserved') ? (
           <>
             <div style={{ fontSize: 13, fontWeight: 500 }}>{room.currentGuest}</div>
             <div style={{ fontSize: 11, color: 'var(--mute)', marginTop: 2 }}>
               {room.status === 'occupied'
                 ? `Departs ${room.checkoutDate}`
-                : room.status === 'reserved'
-                  ? `Arriving · ${room.checkoutDate ? `departs ${room.checkoutDate}` : 'date TBC'}`
-                  : room.checkoutDate}
+                : `Arriving · ${room.checkoutDate ? `departs ${room.checkoutDate}` : 'date TBC'}`}
             </div>
           </>
         ) : (
@@ -201,7 +199,8 @@ function DeleteWarningModal({ roomNumber, onConfirm, onCancel }) {
   );
 }
 
-function OccupiedWarningModal({ roomNumber, onConfirm, onCancel }) {
+function OccupiedWarningModal({ roomNumber, newStatus, onConfirm, onCancel }) {
+  const newLabel = STATUS_CONFIG[newStatus]?.label || newStatus;
   return (
     <div style={{
       position: 'fixed', inset: 0, zIndex: 300,
@@ -230,19 +229,19 @@ function OccupiedWarningModal({ roomNumber, onConfirm, onCancel }) {
             <Icon name="alert" size={17} />
           </div>
           <div>
-            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--terracotta)' }}>Mark room available?</div>
+            <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--terracotta)' }}>Room is currently occupied</div>
             <div style={{ fontSize: 11, color: 'var(--terracotta)', opacity: 0.8, marginTop: 1 }}>
-              Room {roomNumber} is currently occupied
+              Room {roomNumber} · Change to {newLabel}
             </div>
           </div>
         </div>
 
         <div style={{ padding: '24px 24px 20px' }}>
           <p style={{ fontSize: 14, lineHeight: 1.65, color: 'var(--ink)', margin: '0 0 12px' }}>
-            This will move Room {roomNumber} from occupied to available.
+            Room {roomNumber} is currently occupied by a guest. You are about to mark it as <strong>{newLabel}</strong>.
           </p>
           <p style={{ fontSize: 13, lineHeight: 1.65, color: 'var(--ink-3)', margin: 0 }}>
-            Confirm only if the guest has checked out or the occupancy was set by mistake.
+            Only proceed if the guest has checked out or the status change has been authorised.
           </p>
         </div>
 
@@ -252,7 +251,7 @@ function OccupiedWarningModal({ roomNumber, onConfirm, onCancel }) {
         }}>
           <button className="btn btn-ghost" onClick={onCancel}>Keep occupied</button>
           <button className="btn btn-primary" onClick={onConfirm}>
-            <Icon name="check" size={13} /> Mark available
+            <Icon name="check" size={13} /> Confirm — mark {newLabel}
           </button>
         </div>
       </div>
@@ -329,7 +328,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
   const [maxGuests, setMaxGuests] = useState(room.maxGuests ?? '');
 
   async function handleSave() {
-    if (room.status === 'occupied' && status === 'available') {
+    if (room.status === 'occupied' && status !== 'occupied') {
       setShowWarning(true);
       return;
     }
@@ -411,6 +410,7 @@ function ManageModal({ room, canManage, canDelete, role, onClose, onSaved }) {
       {showWarning && (
         <OccupiedWarningModal
           roomNumber={room.roomNumber}
+          newStatus={status}
           onConfirm={doSave}
           onCancel={() => setShowWarning(false)}
         />

@@ -16,7 +16,7 @@ import api from '../lib/api';
  * Returns { data, loading, error, refetch }
  */
 export function useApi(url, { defaultData = null, deps = [], staleTime } = {}) {
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, isFetching, error, refetch } = useQuery({
     queryKey: url ? [url, ...deps] : ['__disabled__'],
     queryFn: async ({ signal }) => {
       const res = await api.get(url, { signal });
@@ -28,9 +28,10 @@ export function useApi(url, { defaultData = null, deps = [], staleTime } = {}) {
   });
 
   return {
-    data: data ?? defaultData,
-    loading: isLoading,
-    error: error?.response?.data?.message || error?.message || null,
+    data:     data ?? defaultData,
+    loading:  isLoading,
+    fetching: isFetching,
+    error:    error?.response?.data?.message || error?.message || null,
     refetch,
   };
 }

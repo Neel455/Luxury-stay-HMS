@@ -29,9 +29,10 @@ import MaintenancePage       from './pages/MaintenancePage';
 import ServiceRequestsPage   from './pages/ServiceRequestsPage';
 
 // Commerce
-import BillingPage  from './pages/BillingPage';
-import GuestsPage   from './pages/GuestsPage';
-import FeedbackPage from './pages/FeedbackPage';
+import BillingPage       from './pages/BillingPage';
+import GuestsPage        from './pages/GuestsPage';
+import FeedbackPage      from './pages/FeedbackPage';
+import ContactInboxPage  from './pages/ContactInboxPage';
 
 // Admin
 import AnalyticsPage   from './pages/AnalyticsPage';
@@ -91,23 +92,24 @@ export default function App() {
       <Route element={<ProtectedRoute roles={ALL_STAFF}><AppShell /></ProtectedRoute>}>
 
         {/* Operations */}
-        <Route path="/dashboard"    element={<ProtectedRoute roles={DESK}><DashboardPage /></ProtectedRoute>} />
-        <Route path="/reservations" element={<ProtectedRoute roles={DESK}><ReservationsPage /></ProtectedRoute>} />
-        <Route path="/checkin"      element={<ProtectedRoute roles={DESK}><CheckInPage /></ProtectedRoute>} />
-        <Route path="/rooms"        element={<ProtectedRoute roles={ALL_STAFF}><RoomsPage /></ProtectedRoute>} />
-        <Route path="/housekeeping" element={<ProtectedRoute roles={['admin','manager','housekeeping']}><HousekeepingPage /></ProtectedRoute>} />
+        <Route path="/dashboard"    element={<ProtectedRoute roles={DESK}        pageLabel="Dashboard"        ><DashboardPage /></ProtectedRoute>} />
+        <Route path="/reservations" element={<ProtectedRoute roles={DESK}        pageLabel="Reservations"     ><ReservationsPage /></ProtectedRoute>} />
+        <Route path="/checkin"      element={<ProtectedRoute roles={DESK}        pageLabel="Check-in / out"   ><CheckInPage /></ProtectedRoute>} />
+        <Route path="/rooms"        element={<ProtectedRoute roles={ALL_STAFF}   pageLabel="Rooms"            ><RoomsPage /></ProtectedRoute>} />
+        <Route path="/housekeeping" element={<ProtectedRoute roles={['admin','manager','housekeeping']} pageLabel="Housekeeping"     ><HousekeepingPage /></ProtectedRoute>} />
         <Route path="/maintenance"  element={<ProtectedRoute roles={['admin','manager','housekeeping','service']}><MaintenancePage /></ProtectedRoute>} />
-        <Route path="/services"     element={<ProtectedRoute roles={['admin','manager','housekeeping','service']}><ServiceRequestsPage /></ProtectedRoute>} />
+        <Route path="/services"     element={<ProtectedRoute roles={['admin','manager','housekeeping','service']} pageLabel="Service Requests"><ServiceRequestsPage /></ProtectedRoute>} />
 
         {/* Commerce */}
-        <Route path="/billing"  element={<ProtectedRoute roles={DESK}><BillingPage /></ProtectedRoute>} />
-        <Route path="/guests"   element={<ProtectedRoute roles={DESK}><GuestsPage /></ProtectedRoute>} />
-        <Route path="/feedback" element={<ProtectedRoute roles={ADMIN_MGR}><FeedbackPage /></ProtectedRoute>} />
+        <Route path="/billing"  element={<ProtectedRoute roles={DESK}      pageLabel="Billing"      ><BillingPage /></ProtectedRoute>} />
+        <Route path="/guests"   element={<ProtectedRoute roles={DESK}      pageLabel="Guests"       ><GuestsPage /></ProtectedRoute>} />
+        <Route path="/feedback" element={<ProtectedRoute roles={ADMIN_MGR} pageLabel="Feedback"     ><FeedbackPage /></ProtectedRoute>} />
+        <Route path="/inbox"    element={<ProtectedRoute roles={DESK}      pageLabel="Inbox"        ><ContactInboxPage /></ProtectedRoute>} />
 
         {/* Administration */}
-        <Route path="/analytics" element={<ProtectedRoute roles={ADMIN_MGR}><AnalyticsPage /></ProtectedRoute>} />
-        <Route path="/suite-types" element={<ProtectedRoute roles={['admin']}><SuitesAdminPage /></ProtectedRoute>} />
-        <Route path="/staff"     element={<ProtectedRoute roles={['admin']}><StaffPage /></ProtectedRoute>} />
+        <Route path="/analytics"   element={<ProtectedRoute roles={ALL_STAFF}   pageLabel="Analytics"    ><AnalyticsPage /></ProtectedRoute>} />
+        <Route path="/suite-types" element={<ProtectedRoute roles={ALL_STAFF}   pageLabel="Suites"       ><SuitesAdminPage /></ProtectedRoute>} />
+        <Route path="/staff"       element={<ProtectedRoute roles={ALL_STAFF}   pageLabel="Staff & Roles"><StaffPage /></ProtectedRoute>} />
       </Route>
 
       {/* Catch-all */}

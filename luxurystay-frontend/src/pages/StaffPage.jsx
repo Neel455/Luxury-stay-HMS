@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useToast } from '../context/ToastContext';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -36,6 +36,7 @@ const SIDEBAR_PAGE_ACCESS = [
       { label: 'Billing',             roles: ['admin', 'manager', 'receptionist'] },
       { label: 'Guests',              roles: ['admin', 'manager', 'receptionist'] },
       { label: 'Feedback',            roles: ['admin', 'manager'] },
+      { label: 'Inbox',               roles: ['admin', 'manager', 'receptionist'] },
     ],
   },
   {
@@ -68,14 +69,27 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
 }
 
-// ─── Toggle (display only) ────────────────────────────────────────────────────
+// ─── Toggle ───────────────────────────────────────────────────────────────────
 
-function Toggle({ on }) {
+function Toggle({ on, onClick }) {
   return (
-    <div style={{ width: 32, height: 18, borderRadius: 10, background: on ? 'var(--ink)' : 'var(--hairline)', position: 'relative', flexShrink: 0 }}>
+    <div onClick={onClick} style={{ width: 32, height: 18, borderRadius: 10, background: on ? 'var(--ink)' : 'var(--hairline)', position: 'relative', flexShrink: 0, cursor: 'pointer', transition: 'background 0.15s' }}>
       <div style={{ position: 'absolute', top: 2, left: on ? 16 : 2, width: 14, height: 14, borderRadius: '50%', background: 'var(--paper)', transition: 'left 0.15s' }} />
     </div>
   );
+}
+
+function buildInitialPerms() {
+  const perms = {};
+  for (const role of ROLES) {
+    perms[role] = {};
+    for (const section of SIDEBAR_PAGE_ACCESS) {
+      for (const page of section.pages) {
+        perms[role][page.label] = page.roles.includes(role);
+      }
+    }
+  }
+  return perms;
 }
 
 // ─── Staff Modal (Add / Edit) ─────────────────────────────────────────────────
@@ -177,12 +191,53 @@ function StaffModal({ staff, onClose, onSaved }) {
 export default function StaffPage() {
   const { isMobile, isTablet } = useBreakpoint();
   const toast = useToast();
-  const [selected,    setSelected]    = useState(null);
-  const [editing,     setEditing]     = useState(null);
-  const [showAdd,     setShowAdd]     = useState(false);
-  const [roleFilter,  setRoleFilter]  = useState('all');
-  const [refreshKey,  setRefreshKey]  = useState(0);
-  const [activePerms, setActivePerms] = useState('receptionist');
+  const [selected,      setSelected]      = useState(null);
+  const [editing,       setEditing]       = useState(null);
+  const [showAdd,       setShowAdd]       = useState(false);
+  const [roleFilter,    setRoleFilter]    = useState('all');
+  const [refreshKey,    setRefreshKey]    = useState(0);
+  const [activePerms,   setActivePerms]   = useState('receptionist');
+  const [rolePerms,     setRolePerms]     = useState(buildInitialPerms);
+  const [permsLoading,  setPermsLoading]  = useState(true);
+  const [saving,        setSaving]        = useState(false);
+  const saveTimer = useRef(null);
+
+  // Load persisted permissions from API
+  useEffect(() => {
+    api.get('/api/role-permissions')
+      .then(res => {
+        const loaded = res.data?.data?.permissions;
+        if (loaded) setRolePerms(loaded);
+      })
+      .catch(() => {/* keep defaults on error */})
+      .finally(() => setPermsLoading(false));
+  }, []);
+
+  // Debounced save — fires 600ms after last toggle
+  function persistPerms(role, pages) {
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    setSaving(true);
+    saveTimer.current = setTimeout(async () => {
+      try {
+        await api.put(`/api/role-permissions/${role}`, { pages });
+      } catch {
+        toast.error('Failed to save permissions.');
+      } finally {
+        setSaving(false);
+      }
+    }, 600);
+  }
+
+  function togglePerm(pageLabel) {
+    setRolePerms(p => {
+      const updated = {
+        ...p,
+        [activePerms]: { ...p[activePerms], [pageLabel]: !p[activePerms][pageLabel] },
+      };
+      persistPerms(activePerms, updated[activePerms]);
+      return updated;
+    });
+  }
 
   const { data, loading } = useApi('/api/users?limit=100', { deps: [refreshKey] });
   const staff = (data?.users || []).filter(u => u.role !== 'guest');
@@ -211,7 +266,7 @@ export default function StaffPage() {
     ...section,
     pages: section.pages.map(page => ({
       ...page,
-      allowed: page.roles.includes(activePerms),
+      allowed: !!(rolePerms[activePerms] || {})[page.label],
     })),
   }));
 
@@ -346,13 +401,16 @@ export default function StaffPage() {
             /* Role permissions panel */
             <div>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 16 }}>
-                <h2 className="display" style={{ fontSize: 28, margin: 0 }}>Role permissions</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <h2 className="display" style={{ fontSize: 28, margin: 0 }}>Role permissions</h2>
+                  {saving && <span style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '0.05em' }}>Saving…</span>}
+                </div>
                 <select value={activePerms} onChange={e => setActivePerms(e.target.value)}
                   style={{ fontSize: 11, padding: '6px 10px', border: '1px solid var(--hairline)', background: 'var(--paper)', borderRadius: 2 }}>
                   {ROLES.map(r => <option key={r} value={r}>{ROLE_LABELS[r]}</option>)}
                 </select>
               </div>
-              <div className="card" style={{ padding: 24 }}>
+              <div className="card" style={{ padding: 24, opacity: permsLoading ? 0.5 : 1, transition: 'opacity 0.2s' }}>
                 <p style={{ margin: '0 0 18px', fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.5 }}>
                   {activePerms === 'admin'        && 'Full system access. Can manage all aspects of the property including staff and settings.'}
                   {activePerms === 'manager'      && 'Broad operational access including analytics and housekeeping management. Cannot manage staff or settings.'}
@@ -368,7 +426,7 @@ export default function StaffPage() {
                     {section.pages.map((page, index) => (
                       <div key={page.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: index < section.pages.length - 1 ? '1px solid var(--hairline-2)' : 'none' }}>
                         <span style={{ fontSize: 12 }}>{page.label}</span>
-                        <Toggle on={page.allowed} />
+                        <Toggle on={page.allowed} onClick={() => togglePerm(page.label)} />
                       </div>
                     ))}
                   </div>

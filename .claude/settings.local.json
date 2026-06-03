@@ -20,7 +20,26 @@
       "PowerShell(Get-ChildItem -Path \"E:\\\\aptech\\\\Luxurystay\" -Force | Format-Table Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"Directory\"}else{\"File\"}}} -AutoSize)",
       "PowerShell(Get-ChildItem -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-frontend\" -Force | Format-Table Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"Directory\"}else{\"File\"}}} -AutoSize)",
       "PowerShell(Get-ChildItem -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-backend\" -Force | Format-Table Name, @{Name=\"Type\"; Expression={if\\($_.PSIsContainer\\){\"Directory\"}else{\"File\"}}} -AutoSize)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Path \"E:\\\\aptech\\\\Luxurystay\" -Directory)",
+      "Bash(grep -E \"\\\\.js$\")",
+      "Bash(grep -E \"\\\\.jsx$\")",
+      "Bash(npm install *)",
+      "Bash(node generate_docs.mjs)",
+      "PowerShell(Get-Item \"E:\\\\aptech\\\\Luxurystay\\\\LuxuryStay_User_Manual.docx\",\"E:\\\\aptech\\\\Luxurystay\\\\LuxuryStay_Developer_Guide.docx\",\"E:\\\\aptech\\\\Luxurystay\\\\LuxuryStay_Presentation.pptx\" | Select-Object Name, @{N='Size \\(KB\\)';E={[math]::Round\\($_.Length/1KB,1\\)}})",
+      "PowerShell(Get-ChildItem \"E:\\\\aptech\\\\Luxurystay\" | Where-Object { $_.Name -match \"LuxuryStay\" } | Format-Table Name, Length -AutoSize)",
+      "Bash(npx playwright *)",
+      "Bash(node server.js)",
+      "Bash(curl -s http://localhost:5000/api/auth/login -o /dev/null -w \"%{http_code}\")",
+      "Bash(curl -s http://localhost:5173 -o /dev/null -w \"%{http_code}\")",
+      "Bash(node capture_screenshots.mjs)",
+      "Bash(node -e \"const {chromium} = require\\('@playwright/test'\\); console.log\\('ok'\\)\")",
+      "PowerShell(Get-ChildItem \"E:\\\\aptech\\\\Luxurystay\\\\docs\" | Where-Object { -not $_.PSIsContainer } | Format-Table Name, @{N='Size \\(KB\\)';E={[math]::Round\\($_.Length/1KB,1\\)}} -AutoSize)",
+      "Bash(Get-ChildItem -Path \"E:\\\\aptech\\\\Luxurystay\\\\luxurystay-backend\" -Recurse -Filter \"*.js\")",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(Get-ChildItem -Path \"E:\\\\aptech\\\\eventsphere\" -Force)",
+      "Bash(Select-Object Name, Mode)",
+      "Bash(npm init *)"
     ]
   }
 }

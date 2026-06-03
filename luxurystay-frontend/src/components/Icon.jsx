@@ -23,6 +23,7 @@ const PATHS = {
   more:      <><circle cx="5" cy="12" r="1" /><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /></>,
   filter:    <path d="M3 5h18l-7 9v6l-4-2v-4z" />,
   download:  <path d="M12 3v13M6 12l6 6 6-6M4 21h16" />,
+  print:     <><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2" /><rect x="6" y="14" width="12" height="8" /></>,
   mail:      <><rect x="3" y="5" width="18" height="14" rx="1" /><path d="M3 7l9 7 9-7" /></>,
   phone:     <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" />,
   map:       <><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z" /><path d="M9 4v14M15 6v14" /></>,

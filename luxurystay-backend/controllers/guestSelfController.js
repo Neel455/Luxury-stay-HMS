@@ -1,6 +1,7 @@
 const Guest              = require('../models/Guest');
 const Room               = require('../models/Room');
 const Reservation        = require('../models/Reservation');
+const Invoice            = require('../models/Invoice');
 const Feedback           = require('../models/Feedback');
 const ServiceRequest     = require('../models/ServiceRequest');
 const MaintenanceRequest = require('../models/MaintenanceRequest');
@@ -323,6 +324,33 @@ exports.createBooking = catchAsync(async (req, res, next) => {
     lastStatusChange: new Date(),
   });
 
+  // Mark deposit as paid (card was collected at booking)
+  await Reservation.findByIdAndUpdate(reservation._id, { depositPaid: true });
+
+  // Auto-generate invoice for the deposit payment
+  const invoice = new Invoice({
+    reservation: reservation._id,
+    guest:       guest._id,
+    room:        room._id,
+    lineItems: [
+      {
+        description: `Room accommodation — ${TYPE_DISPLAY[room.type] || room.type} · ${nights} night${nights !== 1 ? 's' : ''}`,
+        category:    'room',
+        quantity:    nights,
+        unitPrice:   room.rates.standard,
+        total:       totalAmount,
+      },
+    ],
+    taxRate:       10,
+    amountPaid:    depositAmount,
+    paymentStatus: 'partial',
+    paymentMethod: 'card',
+    paymentDate:   new Date(),
+    notes:         `Deposit (30%) collected at booking. Balance due at checkout.`,
+  });
+  invoice.recalculate(nights);
+  await invoice.save();
+
   // Populate room for response
   await reservation.populate('room', 'roomNumber floor type');
 
@@ -348,14 +376,17 @@ exports.createBooking = catchAsync(async (req, res, next) => {
         type:   TYPE_DISPLAY[reservation.room.type] || reservation.room.type,
         floor:  reservation.room.floor,
       },
-      checkIn:      checkIn,
-      checkOut:     checkOut,
+      checkIn:       checkIn,
+      checkOut:      checkOut,
       nights,
-      adults:       Number(adults),
-      children:     Number(children),
+      adults:        Number(adults),
+      children:      Number(children),
       totalAmount,
       depositAmount,
-      status:       'pending',
+      depositPaid:   true,
+      status:        'pending',
+      invoiceNumber: invoice.invoiceNumber,
+      invoiceTotal:  invoice.totalAmount,
     },
   });
 });

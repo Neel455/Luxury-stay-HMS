@@ -590,14 +590,14 @@ export default function GuestPortalPage() {
   const [showHistory,       setShowHistory]       = useState(false);
   const [feedbackTarget,    setFeedbackTarget]    = useState(null);
 
-  const { data: resData,  loading: resLoading  } = useApi('/api/guest/reservations');
+  const { data: resData,  loading: resLoading  } = useApi('/api/guest/reservations', { staleTime: 0 });
   const { data: svcData,  loading: svcLoading  } = useApi('/api/guest/service');
   const reservations  = resData?.reservations ?? [];
   const myRequests    = svcData?.requests     ?? [];
 
   const activeStays   = reservations.filter(r => r.status === 'checked-in').sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
   const upcomingStays = reservations.filter(r => ['confirmed', 'pending'].includes(r.status)).sort((a, b) => new Date(a.checkIn) - new Date(b.checkIn));
-  const pastStays     = reservations.filter(r => r.status === 'checked-out').sort((a, b) => new Date(b.checkOut) - new Date(a.checkOut));
+  const pastStays     = reservations.filter(r => r.status === 'checked-out').sort((a, b) => new Date(b.checkIn) - new Date(a.checkIn));
   const displayStays  = [...activeStays, ...upcomingStays];
   const activeStay   = activeStays[0] || null;
   const safeIndex    = Math.min(displayIndex, Math.max(displayStays.length - 1, 0));

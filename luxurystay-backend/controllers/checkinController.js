@@ -1,7 +1,8 @@
-const Reservation      = require('../models/Reservation');
-const Room             = require('../models/Room');
-const Guest            = require('../models/Guest');
-const GuestActivityLog = require('../models/GuestActivityLog');
+const Reservation        = require('../models/Reservation');
+const Room               = require('../models/Room');
+const Guest              = require('../models/Guest');
+const GuestActivityLog   = require('../models/GuestActivityLog');
+const HousekeepingTask   = require('../models/HousekeepingTask');
 const { AppError } = require('../middleware/errorHandler');
 const catchAsync   = require('../utils/catchAsync');
 const { sendSuccess } = require('../utils/apiResponse');
@@ -43,6 +44,7 @@ const buildPayload = (r) => ({
   keyIssued:            r.keyIssued,
   idVerified:           r.idVerified,
   departureChecklist:   r.departureChecklist,
+  checkoutAdjustment:   r.checkoutAdjustment || null,
   createdBy:            r.createdBy,
   createdAt:            r.createdAt,
   updatedAt:            r.updatedAt,
@@ -161,7 +163,45 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     );
   }
 
-  const { departureChecklist, notes } = req.body;
+  const { departureChecklist, notes, waiveAdjustment } = req.body;
+
+  // ── Compute checkout adjustment ─────────────────────────────────────────────
+  const scheduledNights = Math.ceil(
+    (new Date(reservation.checkOutDate) - new Date(reservation.checkInDate)) / 86400000
+  );
+  const nightlyRate = scheduledNights > 0
+    ? Math.round(reservation.totalAmount / scheduledNights)
+    : 0;
+
+  const today      = new Date(); today.setHours(0, 0, 0, 0);
+  const scheduled  = new Date(reservation.checkOutDate); scheduled.setHours(0, 0, 0, 0);
+  const diffDays   = Math.round((scheduled - today) / 86400000); // +ve = early, -ve = overdue
+
+  let adjType = 'none', adjNights = 0, adjAmount = 0, adjReason = null;
+  if (diffDays > 0) {
+    adjType   = 'credit';
+    adjNights = diffDays;
+    adjAmount = nightlyRate * diffDays;
+    adjReason = `Early departure credit — ${diffDays} unused night${diffDays !== 1 ? 's' : ''}`;
+  } else if (diffDays < 0) {
+    adjType   = 'charge';
+    adjNights = Math.abs(diffDays);
+    adjAmount = nightlyRate * Math.abs(diffDays);
+    adjReason = `Late checkout charge — ${Math.abs(diffDays)} extra day${Math.abs(diffDays) !== 1 ? 's' : ''}`;
+  }
+
+  const canWaive = ['admin', 'manager'].includes(req.user?.role);
+  const doWaive  = canWaive && waiveAdjustment === true;
+
+  reservation.checkoutAdjustment = {
+    type:     doWaive ? 'none' : adjType,
+    nights:   adjNights,
+    amount:   doWaive ? 0 : adjAmount,
+    waived:   doWaive,
+    waivedBy: doWaive ? (req.user?.name || req.user?.email) : null,
+    reason:   adjReason,
+  };
+  // ────────────────────────────────────────────────────────────────────────────
 
   reservation.status       = 'checked-out';
   reservation.checkOutTime = new Date();
@@ -188,6 +228,24 @@ exports.checkOut = catchAsync(async (req, res, next) => {
     lastStatusChange: new Date(),
     statusNote:       `Departure clean · ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}`,
   });
+
+  // Auto-create a departure-clean housekeeping task (skip if one already exists for this room)
+  const existingTask = await HousekeepingTask.findOne({
+    room:     reservation.room,
+    taskType: 'departure_clean',
+    status:   { $in: ['queued', 'in-progress'] },
+  });
+  if (!existingTask) {
+    await HousekeepingTask.create({
+      room:        reservation.room,
+      taskType:    'departure_clean',
+      priority:    'high',
+      status:      'queued',
+      scheduledFor: new Date(),
+      notes:       `Auto-generated on checkout · booking ${reservation.bookingId}.`,
+      createdBy:   req.user.id,
+    });
+  }
 
   // Recalculate guest stats (visits, lifetime spend, tier)
   await Guest.recalcStats(reservation.guest);

@@ -37,18 +37,7 @@ export default function Topbar({ unreadCount = 0, onNotifClick, onMenuToggle }) 
         </div>
       </div>
 
-      <div className="topbar-right">
-        <div className="search">
-          <Icon name="search" size={14} />
-          <span>Search rooms, guests, reservations…</span>
-          <span className="kbd" style={{ marginLeft: 'auto' }}>⌘K</span>
-        </div>
-
-        <button className="icon-btn" title="Notifications" onClick={onNotifClick} style={{ position: 'relative' }}>
-          <Icon name="bell" size={16} />
-          {unreadCount > 0 && <span className="dot" />}
-        </button>
-      </div>
+      <div className="topbar-right" />
     </header>
   );
 }

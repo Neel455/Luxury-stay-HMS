@@ -83,8 +83,39 @@ exports.createTask = catchAsync(async (req, res, next) => {
  * Access: admin, manager, housekeeping
  * Supports ?status=&priority=&assignedTo=&roomId=&date=&page=&limit=&sort=
  * Returns tasks grouped by status for the FE Kanban board.
+ *
+ * On every load: auto-creates departure_clean tasks for any cleaning room
+ * that has no active (queued/in-progress) task, so the board stays in sync
+ * with room status even for rooms that were set to cleaning before this logic existed.
  */
 exports.getAllTasks = catchAsync(async (req, res) => {
+  // Sync: find cleaning rooms missing an active task and create one
+  const cleaningRooms = await Room.find({ status: 'cleaning', isActive: true }).select('_id');
+  if (cleaningRooms.length) {
+    const roomIds = cleaningRooms.map(r => r._id);
+    const activeTasks = await HousekeepingTask.find({
+      room:     { $in: roomIds },
+      taskType: 'departure_clean',
+      status:   { $in: ['queued', 'in-progress'] },
+    }).select('room');
+    const coveredRoomIds = new Set(activeTasks.map(t => String(t.room)));
+
+    const toCreate = cleaningRooms.filter(r => !coveredRoomIds.has(String(r._id)));
+    if (toCreate.length) {
+      const systemUserId = req.user?.id;
+      await HousekeepingTask.insertMany(
+        toCreate.map(r => ({
+          room:        r._id,
+          taskType:    'departure_clean',
+          priority:    'high',
+          status:      'queued',
+          scheduledFor: new Date(),
+          notes:       'Auto-generated: room in cleaning status.',
+          createdBy:   systemUserId,
+        }))
+      );
+    }
+  }
   const { page, limit, skip } = getPagination(req.query);
   const { status, priority, assignedTo, roomId, date, sort } = req.query;
 
@@ -231,13 +262,16 @@ exports.updateTask = catchAsync(async (req, res, next) => {
     return next(new AppError('Cannot update a completed task.', 400));
   }
 
-  const allowedFields = ['taskType', 'title', 'priority', 'scheduledFor', 'notes'];
+  const allowedFields = ['taskType', 'title', 'assignedTo', 'priority', 'scheduledFor', 'notes', 'status'];
   const updateFields  = {};
   allowedFields.forEach((f) => {
     if (req.body[f] !== undefined) updateFields[f] = req.body[f];
   });
 
   if (updateFields.scheduledFor) updateFields.scheduledFor = new Date(updateFields.scheduledFor);
+  if (updateFields.status && !['queued', 'in-progress'].includes(updateFields.status)) {
+    return next(new AppError('Use the /complete endpoint to mark a task as completed.', 400));
+  }
   if (Object.keys(updateFields).length === 0) {
     return next(new AppError('No valid fields provided for update.', 400));
   }

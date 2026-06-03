@@ -726,6 +726,32 @@ function StepDetails({ details, onChange, missingFields = [] }) {
   );
 }
 
+// ─── Card validation helpers ─────────────────────────────────────────────────
+
+function isValidCardNumber(v) {
+  return /^\d{13,19}$/.test(v.replace(/\s/g, ''));
+}
+
+function isValidExpiry(v) {
+  const m = v.replace(/\s/g, '').match(/^(\d{2})\/(\d{2})$/);
+  if (!m) return false;
+  const month = +m[1], year = +m[2] + 2000;
+  if (month < 1 || month > 12) return false;
+  return new Date(year, month, 1) > new Date();
+}
+
+function isValidCvv(v) { return /^\d{3,4}$/.test(v.trim()); }
+
+function computeCardErrors(d) {
+  return {
+    card:     isValidCardNumber(d.card)    ? '' : 'Enter a valid card number',
+    expiry:   isValidExpiry(d.expiry)      ? '' : 'Enter a valid expiry date (MM / YY)',
+    cvv:      isValidCvv(d.cvv)           ? '' : 'Enter a valid CVV (3–4 digits)',
+    cardName: d.cardName.trim().length > 1 ? '' : 'Enter the name as printed on your card',
+    accepted: d.accepted                   ? '' : 'Please accept the terms to continue',
+  };
+}
+
 // ─── Step 4 — Review & pay ────────────────────────────────────────────────────
 
 function ReviewRow({ l, v }) {
@@ -737,7 +763,16 @@ function ReviewRow({ l, v }) {
   );
 }
 
-function StepReview({ dates, selectedSuite, details, total, onChange }) {
+function FieldError({ msg }) {
+  if (!msg) return null;
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 5, fontSize: 11, color: 'var(--terracotta)', fontWeight: 500 }}>
+      <Icon name="alert" size={10} />{msg}
+    </div>
+  );
+}
+
+function StepReview({ dates, selectedSuite, details, total, onChange, showErrors }) {
   const { isMobile, isTablet } = useBreakpoint();
   const nights = dates.checkIn && dates.checkOut
     ? Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000) : 0;
@@ -750,6 +785,14 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
   }
 
   const deposit = Math.round(total * 0.3);
+  const errs = showErrors ? computeCardErrors(details) : {};
+  const hasErrors = showErrors && Object.values(errs).some(Boolean);
+
+  const inputStyle = (key) => ({
+    fontFamily: key === 'card' ? 'var(--mono)' : undefined,
+    letterSpacing: key === 'card' ? '0.1em' : undefined,
+    borderColor: errs[key] ? 'var(--terracotta)' : undefined,
+  });
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
@@ -783,43 +826,68 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
             }}>{p}</div>
           ))}
         </div>
+        {hasErrors && (
+          <div style={{
+            background: 'var(--terracotta-soft)', border: '1px solid var(--terracotta)',
+            padding: '10px 14px', marginBottom: 18,
+            fontSize: 12, color: 'var(--terracotta)',
+            display: 'flex', gap: 8, alignItems: 'center',
+          }}>
+            <Icon name="alert" size={12} />
+            Please correct the highlighted fields before reserving.
+          </div>
+        )}
+
         <div style={{
           display: 'grid',
           gridTemplateColumns: isMobile ? '1fr' : isTablet ? '1fr 1fr' : '1fr 1fr 1fr',
           gap: 18, marginBottom: 18,
         }}>
           <div className="field" style={{ gridColumn: isMobile ? undefined : isTablet ? 'span 2' : 'span 3' }}>
-            <label>Card number</label>
+            <label>Card number <span style={{ color: 'var(--terracotta)' }}>*</span></label>
             <input
               value={details.card}
               onChange={e => onChange('card', e.target.value)}
               placeholder="•••• •••• •••• ••••"
-              style={{ fontFamily: 'var(--mono)', letterSpacing: '0.1em' }}
+              maxLength={19}
+              inputMode="numeric"
+              style={inputStyle('card')}
             />
+            <FieldError msg={errs.card} />
           </div>
           <div className="field">
-            <label>Expiry</label>
+            <label>Expiry <span style={{ color: 'var(--terracotta)' }}>*</span></label>
             <input
               value={details.expiry}
               onChange={e => onChange('expiry', e.target.value)}
               placeholder="MM / YY"
+              maxLength={7}
+              inputMode="numeric"
+              style={inputStyle('expiry')}
             />
+            <FieldError msg={errs.expiry} />
           </div>
           <div className="field">
-            <label>CVV</label>
+            <label>CVV <span style={{ color: 'var(--terracotta)' }}>*</span></label>
             <input
               value={details.cvv}
               onChange={e => onChange('cvv', e.target.value)}
               placeholder="•••"
+              maxLength={4}
+              inputMode="numeric"
+              style={inputStyle('cvv')}
             />
+            <FieldError msg={errs.cvv} />
           </div>
           <div className="field">
-            <label>Name on card</label>
+            <label>Name on card <span style={{ color: 'var(--terracotta)' }}>*</span></label>
             <input
               value={details.cardName}
               onChange={e => onChange('cardName', e.target.value)}
               placeholder="As printed"
+              style={inputStyle('cardName')}
             />
+            <FieldError msg={errs.cardName} />
           </div>
         </div>
         <div style={{ fontSize: 12, color: 'var(--mute)', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -829,12 +897,12 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
       </div>
 
       {/* T&C checkbox */}
-      <div className="card" style={{ padding: 24 }}>
+      <div className="card" style={{ padding: 24, border: errs.accepted ? '1px solid var(--terracotta)' : undefined }}>
         <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
           <span
             style={{
               width: 18, height: 18, marginTop: 2, flexShrink: 0,
-              border: `1px solid ${details.accepted ? 'var(--ink)' : 'var(--hairline)'}`,
+              border: `1px solid ${errs.accepted ? 'var(--terracotta)' : details.accepted ? 'var(--ink)' : 'var(--hairline)'}`,
               background: details.accepted ? 'var(--ink)' : 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
@@ -852,6 +920,7 @@ function StepReview({ dates, selectedSuite, details, total, onChange }) {
             {' '}to be charged today. The balance is settled on departure.
           </span>
         </label>
+        <FieldError msg={errs.accepted} />
       </div>
     </div>
   );
@@ -893,13 +962,25 @@ export default function GuestBookPage() {
     accepted:        false,
   });
 
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting,         setSubmitting]         = useState(false);
+  const [showPaymentErrors,  setShowPaymentErrors]  = useState(false);
 
   function updateDate(field, value) {
     setDates(d => ({ ...d, [field]: value }));
   }
 
   function updateDetail(field, value) {
+    if (field === 'card') {
+      const digits = value.replace(/\D/g, '').slice(0, 16);
+      value = digits.replace(/(.{4})/g, '$1 ').trim();
+    }
+    if (field === 'expiry') {
+      const digits = value.replace(/\D/g, '').slice(0, 4);
+      value = digits.length > 2 ? digits.slice(0, 2) + ' / ' + digits.slice(2) : digits;
+    }
+    if (field === 'cvv') {
+      value = value.replace(/\D/g, '').slice(0, 4);
+    }
     setDetails(d => ({ ...d, [field]: value }));
   }
 
@@ -925,10 +1006,8 @@ export default function GuestBookPage() {
     !asText(details.phone).trim() && 'mobile',
   ].filter(Boolean);
 
-  const missingPaymentFields = [
-    !asText(details.card).trim() && 'card number',
-    !details.accepted && 'house terms',
-  ].filter(Boolean);
+  const cardErrors = computeCardErrors(details);
+  const missingPaymentFields = Object.values(cardErrors).filter(Boolean);
 
   const canContinue = [
     !!(dates.checkIn && dates.checkOut && nights > 0),
@@ -972,11 +1051,12 @@ export default function GuestBookPage() {
 
   function handleContinue() {
     if (!canContinue) {
+      if (step === 3) setShowPaymentErrors(true);
       const messages = [
         'Choose arrival and departure dates.',
         'Select an available suite.',
         `Complete ${missingGuestFields.join(', ')}.`,
-        `Complete ${missingPaymentFields.join(', ')}.`,
+        'Please fill in all payment details correctly.',
       ];
       toast.error(messages[step] || 'Complete this step to continue.');
       return;
@@ -1021,6 +1101,7 @@ export default function GuestBookPage() {
                 details={details}
                 total={total}
                 onChange={updateDetail}
+                showErrors={showPaymentErrors}
               />
             )}
 

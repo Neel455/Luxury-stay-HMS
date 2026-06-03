@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.*
+*.log
+.DS_Store
+Thumbs.db
+
+# Auto-generated docs & screenshot tooling
+docs/
+/package.json
+/package-lock.json
+capture_screenshots.mjs
+generate_docs.mjs

@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import Icon from './Icon';
 import { useAuth } from '../context/AuthContext';
+import { usePermissions } from '../context/PermissionsContext';
 
 const NAV = [
   { section: 'Operations', items: [
@@ -15,6 +16,7 @@ const NAV = [
     { id: 'billing',  label: 'Billing',   icon: 'receipt', path: '/billing',  roles: ['admin', 'manager', 'receptionist'] },
     { id: 'guests',   label: 'Guests',    icon: 'user',    path: '/guests',   roles: ['admin', 'manager', 'receptionist'] },
     { id: 'feedback', label: 'Feedback',  icon: 'star',    path: '/feedback', roles: ['admin', 'manager'] },
+    { id: 'inbox',    label: 'Inbox',     icon: 'mail',    path: '/inbox',    roles: ['admin', 'manager', 'receptionist'] },
   ]},
   { section: 'Administration', items: [
     { id: 'analytics', label: 'Analytics',    icon: 'chart',    path: '/analytics', roles: ['admin', 'manager'] },
@@ -40,11 +42,19 @@ function getRoleTitle(role) {
 
 export default function Sidebar({ open = false, onClose }) {
   const { user, logout } = useAuth();
+  const { isPageAllowed } = usePermissions();
   const navigate = useNavigate();
 
   const role = user?.role || 'receptionist';
   const filteredNav = NAV
-    .map(s => ({ ...s, items: s.items.filter(i => i.roles.includes(role)) }))
+    .map(s => ({
+      ...s,
+      items: s.items.filter(item => {
+        const fromDb = isPageAllowed(item.label);
+        // While permissions are loading (null), fall back to hardcoded roles
+        return fromDb === null ? item.roles.includes(role) : fromDb;
+      }),
+    }))
     .filter(s => s.items.length > 0);
 
   async function handleLogout() {

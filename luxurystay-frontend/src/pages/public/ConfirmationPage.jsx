@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PublicShell from '../../layouts/PublicShell';
 import Icon from '../../components/Icon';
@@ -92,6 +93,54 @@ export default function ConfirmationPage() {
   const roomSub    = booking.room?.number ? `Floor ${booking.room.floor} · Suite ${booking.room.number}` : null;
   const guestCount = `${booking.adults} adult${booking.adults !== 1 ? 's' : ''}${booking.children ? `, ${booking.children} child${booking.children !== 1 ? 'ren' : ''}` : ''}`;
 
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  function handlePrint() {
+    const style = document.createElement('style');
+    style.id = '__receipt_print__';
+    style.innerHTML = `
+      @media print {
+        @page { margin: 1.2cm; size: A4 landscape; }
+        body * { visibility: hidden !important; }
+        #print-receipt, #print-receipt * { visibility: visible !important; }
+        #print-receipt {
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100% !important;
+          border: 1px solid #000 !important;
+          box-shadow: none !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    window.print();
+    document.head.removeChild(style);
+  }
+
+  async function handleSavePDF() {
+    const el = document.getElementById('print-receipt');
+    if (!el) return;
+    setPdfLoading(true);
+    try {
+      const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#f7f3ec' });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+      const imgW  = canvas.width  * ratio;
+      const imgH  = canvas.height * ratio;
+      pdf.addImage(imgData, 'PNG', (pageW - imgW) / 2, (pageH - imgH) / 2, imgW, imgH);
+      pdf.save(`LuxuryStay-${booking.bookingId || 'receipt'}.pdf`);
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
   return (
     <PublicShell>
       <section style={{ padding: isMobile ? '40px 20px 60px' : isTablet ? '48px 40px 80px' : '60px 64px 100px', maxWidth: 1080, margin: '0 auto' }}>
@@ -120,7 +169,7 @@ export default function ConfirmationPage() {
         </div>
 
         {/* ── Ticket ──────────────────────────────────────────────────── */}
-        <div style={{
+        <div id="print-receipt" style={{
           position: 'relative',
           display: 'grid', gridTemplateColumns: isTablet ? '1fr' : '1.4fr 1fr',
           border: '1px solid var(--ink)', background: 'var(--paper)',
@@ -230,10 +279,16 @@ export default function ConfirmationPage() {
                 <span style={{ color: 'var(--mute)', fontWeight: 500 }}>Deposit · 30%</span>
                 <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>€{depositAmt.toLocaleString()}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: booking.invoiceNumber ? 8 : 0 }}>
                 <span style={{ color: 'var(--mute)', fontWeight: 500 }}>Balance on arrival</span>
                 <span style={{ fontFamily: 'var(--mono)', fontWeight: 600 }}>€{balanceAmt.toLocaleString()}</span>
               </div>
+              {booking.invoiceNumber && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--hairline)' }}>
+                  <span style={{ color: 'var(--mute)', fontWeight: 500 }}>Invoice</span>
+                  <span style={{ fontFamily: 'var(--mono)', color: 'var(--ink)', fontWeight: 600 }}>{booking.invoiceNumber}</span>
+                </div>
+              )}
             </div>
 
             {/* Cancellation policy */}
@@ -267,14 +322,14 @@ export default function ConfirmationPage() {
 
         {/* ── Action buttons ──────────────────────────────────────────── */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, marginTop: 36, flexWrap: 'wrap' }}>
-          <button className="btn btn-ghost" onClick={() => window.print()}>
-            <Icon name="download" size={12} /> Save as PDF
+          <button className="btn btn-ghost" onClick={handleSavePDF} disabled={pdfLoading}
+            style={{ opacity: pdfLoading ? 0.6 : 1 }}>
+            {pdfLoading
+              ? <><div className="spinner" style={{ width: 12, height: 12, borderWidth: 1.5 }} /> Generating…</>
+              : <><Icon name="download" size={12} /> Save as PDF</>}
           </button>
-          <button className="btn btn-ghost">
-            <Icon name="mail" size={12} /> Email me a copy
-          </button>
-          <button className="btn btn-ghost">
-            <Icon name="calendar" size={12} /> Add to calendar
+          <button className="btn btn-ghost" onClick={handlePrint}>
+            <Icon name="print" size={12} /> Print
           </button>
           <button className="btn btn-primary" onClick={() => navigate('/guest')}>
             Open My Stay <Icon name="arrow_right" size={12} />

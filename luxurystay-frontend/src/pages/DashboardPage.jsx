@@ -107,9 +107,10 @@ function OccupancyDonut({ pct, occupied, available, cleaning, maintenance, total
 
 function RevenueChart({ series, loading }) {
   const max = Math.max(...series.map(d => d.revenue), 1);
+  const hasData = series.some(d => d.revenue > 0);
   return (
     <div className="card" style={{ padding: 28 }}>
-      {loading ? <Spinner page /> : (
+      {loading ? <Spinner page /> : hasData ? (
         <>
           <div className="bar-row">
             {series.map((d, i) => {
@@ -126,6 +127,10 @@ function RevenueChart({ series, loading }) {
             <span>{series[13] && fmtShortDate(series[13].date)}</span>
           </div>
         </>
+      ) : (
+        <div style={{ height: 140, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--mute)', fontSize: 13 }}>
+          No revenue data for the last 14 days.
+        </div>
       )}
     </div>
   );
@@ -212,9 +217,9 @@ export default function DashboardPage() {
   const cleaning    = roomCounts.cleaning   || 0;
   const maintenance = roomCounts.maintenance || 0;
 
-  const expectedArrivals = arrivalsData?.expected || [];
+  const expectedArrivals = (arrivalsData?.arrivals || []).filter(r => r.status !== 'checked-in');
   const totalArrivalCount = arrivalsData
-    ? (arrivalsData.expected?.length || 0) + (arrivalsData.checkedIn?.length || 0)
+    ? (arrivalsData.expected ?? expectedArrivals.length)
     : metrics.arrivalsToday;
 
   const tiles = [

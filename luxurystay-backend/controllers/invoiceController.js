@@ -182,10 +182,12 @@ exports.getAllInvoices = catchAsync(async (req, res) => {
     'Invoices retrieved.',
     {
       invoices: invoices.map(buildPayload),
+      total:    totalCount,
+      pages:    Math.ceil(totalCount / limit),
       summary: {
-        draftTotal:      drafts[0]?.total || 0,
-        outstandingTotal: open[0]?.total  || 0,
-        paidTotal:       paid[0]?.total   || 0,
+        draftTotal:       drafts[0]?.total || 0,
+        outstandingTotal: open[0]?.total   || 0,
+        paidTotal:        paid[0]?.total   || 0,
       },
     },
     getPaginationMeta(totalCount, page, limit)
